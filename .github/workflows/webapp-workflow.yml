@@ -1,0 +1,51 @@
+name: Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AZURE_WEBAPP_NAME: scaleTestApp        # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '16.x'                # set this to the node version to use
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Retrieve Publish Profile
+      id: get-publish-file
+      run: |
+        az webapp deployment list-publishing-profiles \
+          --name "myScaleTestApp" \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --output json > publishprofile.json
+
+  # Step 3: Extract Publish Profile for GitHub Actions Deployment
+    - name: Set Publish Profile for Deployment
+      id: extract-publish-profile
+      run: |
+        publishProfile=$(cat publishprofile.json | jq -r '.[] | select(.publishMethod=="MSDeploy") | .publishUrl,.userName,.userPWD')
+        echo "##vso[task.setvariable variable=publishProfile]$publishProfile"
+
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - name: npm install, build, and test
+      run: |
+        # Build and test the project, then
+        # deploy to Azure Web App.
+        npm install
+        npm run build --if-present
+        # npm run test --if-present
+    - name: 'Deploy to Azure WebApp'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ steps.extract-publish-profile.outputs.publishProfile }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
