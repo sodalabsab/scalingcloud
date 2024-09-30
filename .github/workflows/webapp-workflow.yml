@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  AZURE_WEBAPP_NAME: scaleTestApp        # set this to your application's name
+  AZURE_WEBAPP_NAME: myScaleTestApp        # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '16.x'                # set this to the node version to use
 
@@ -26,7 +26,7 @@ jobs:
       id: get-publish-file
       run: |
         az webapp deployment list-publishing-profiles \
-          --name "myScaleTestApp" \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --output json > publishprofile.json
 
@@ -51,6 +51,6 @@ jobs:
     - name: 'Deploy to Azure WebApp'
       uses: azure/webapps-deploy@v2
       with: 
-        app-name: "myScaleTestApp"
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ steps.extract-publish-profile.outputs.publishProfile }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
