@@ -24,6 +24,21 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    # Step 1: Delete the Resource Group if it exists
+    - name: Delete Resource Group
+      run: |
+        az group delete --name ${{ secrets.AZURE_RESOURCE_GROUP }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --yes --no-wait || echo "Resource group does not exist"
+
+    # Step 2: Wait for Resource Group to be deleted
+    - name: Wait for Resource Group Deletion
+      run: |
+        az group wait --deleted --name ${{ secrets.AZURE_RESOURCE_GROUP }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    # Step 3: Recreate the Resource Group
+    - name: Recreate Resource Group
+      run: |
+        az group create --name ${{ secrets.AZURE_RESOURCE_GROUP }} --location swedencentral
+
     - name: Deploy Bicep template
       uses: azure/arm-deploy@v2
       with:
