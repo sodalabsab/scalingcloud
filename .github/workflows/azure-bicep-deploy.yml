@@ -36,5 +36,4 @@ jobs:
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
           --template-file './main.bicep' \
-          --parameters @./path/to/parameters.json \
           --mode Incremental
