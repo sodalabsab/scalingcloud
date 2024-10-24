@@ -1,9 +1,6 @@
 name: Azure Bicep Deployment
 
 on:
-  # push:
-    # branches:
-      # - main  # Trigger the workflow on push to the main branch
   workflow_dispatch:  # Allows manually triggering the workflow
 
 env:
@@ -16,34 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    # Step 2: Log in to Azure
     - name: Log in to Azure
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # Step 1: Delete the Resource Group if it exists
-    - name: Delete Resource Group
+    # Step 3: Ensure the Resource Group exists (create if it doesn't exist)
+    - name: Ensure Resource Group exists
       run: |
-        az group delete --name ${{ secrets.AZURE_RESOURCE_GROUP }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --yes --no-wait || echo "Resource group does not exist"
+        az group create --name ${{ secrets.AZURE_RESOURCE_GROUP }} --location ${{ env.LOCATION }} \
+        --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    # Step 2: Wait for Resource Group to be deleted
-    - name: Wait for Resource Group Deletion
-      run: |
-        az group wait --deleted --name ${{ secrets.AZURE_RESOURCE_GROUP }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-    # Step 3: Recreate the Resource Group
-    - name: Recreate Resource Group
-      run: |
-        az group create --name ${{ secrets.AZURE_RESOURCE_GROUP }} --location swedencentral
-
+    # Step 4: Deploy the Bicep template (idempotent deployment)
     - name: Deploy Bicep template
-      uses: azure/arm-deploy@v2
-      with:
-        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        template: './main.bicep'
-        scope: resourcegroup 
-        deploymentMode: Incremental
+      run: |
+        az deployment group create \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+          --template-file './main.bicep' \
+          --parameters @./path/to/parameters.json \
+          --mode Incremental
