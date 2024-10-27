@@ -11,7 +11,7 @@ const getAzureRegion = () => {
   // Main route that prints the Azure region
   app.get('/', (req, res) => {
     const region = getAzureRegion();
-    res.send(`This app is up and running in the Azure region: ${region}`);
+    res.send(`This app is running in the Azure region: ${region}`);
   });
 
 app.listen(port, () => {
