@@ -14,7 +14,7 @@ param primaryWebAppName string = 'myPrimaryScaleTestApp'
 param secondaryWebAppName string = 'mySecondaryScaleTestApp'
 
 @description('Name of the Traffic Manager.')
-param trafficManagerName string = 'myTrafficManager'
+param trafficManagerName string = 'scalingCloudTrafficManager'
 
 resource primaryAppServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
