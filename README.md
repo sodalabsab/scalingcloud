@@ -26,6 +26,22 @@ This will:
   
 > **Note:** The resource group will be created in the **`swedencentral`** region by default.
 
+## Setup storage account
+
+az group create --name "nginxContainerGroup" --location "swedencentral" 
+az deployment group create --resource-group "nginxContainerGroup" --template-file "storage.bicep"
+
+curl -L -o html5up-massively.zip https://html5up.net/massively/download
+
+az storage blob upload \
+  --account-name sodalabscourse \             
+  --container-name website-content \      
+  --name massively.zip \
+  --file html5up-massively.zip \
+  --auth-mode key
+  
+Go fetch the SAS-token from the portal and past that to frontdoor.bicep
+
 ## Deploying the Test WebApp
 
 To deploy the test web application, you can either:
