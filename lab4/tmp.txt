@@ -1,0 +1,4 @@
+az group create -l swedencentral -n sodaScale2
+az acr create -n scalecontainers --sku=basic --resource-group scalingcloudgroup -l swedencentral
+Gå in och fixa nykeln i portalen
+az containerapp up --registry-server scalecontainers.azurecr.io --resource-group sodaScale2 -l swedencentral -n my-website --source .
