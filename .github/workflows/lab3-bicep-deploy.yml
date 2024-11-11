@@ -1,8 +1,13 @@
-name: Azure Bicep Deployment
+name: Lab3 Bicep Deployment
 
 on:
   workflow_dispatch:  # Allows manually triggering the workflow
-
+  push:
+    branches:
+      - main
+    paths:
+      - lab3/**  # Triggers the workflow when any file in the lab3 folder is changed
+      
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
