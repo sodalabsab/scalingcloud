@@ -32,6 +32,10 @@ jobs:
         ./setup-massively.sh           # Execute the script
         cd ..
 
+    - name: Log in to Docker Hub
+      run: |
+        docker login -u $DOCKERHUB_USERNAME
+
     # Step 3: Build and Push Docker Image
     - name: Build and push Docker image
       run: |
