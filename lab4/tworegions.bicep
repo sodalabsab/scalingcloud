@@ -4,216 +4,117 @@ param primaryLocation string = 'swedencentral'
 @description('Secondary location for the resources.')
 param secondaryLocation string = 'westeurope'
 
-@description('Name of the App Service Plan.')
-param appServicePlanName string = 'scalePlan'
+@description('Container image for the web app from Azure Container Registry (ACR).')
+param containerImage string
 
-@description('Name of the primary web app.')
-param primaryWebAppName string = 'myPrimaryScaleTestApp'
+@description('Name of the Traffic Manager profile.')
+param trafficManagerName string = 'myTrafficManagerProfile'
 
-@description('Name of the secondary web app.')
-param secondaryWebAppName string = 'mySecondaryScaleTestApp'
-
-@description('Name of the Traffic Manager.')
-param trafficManagerName string = 'scalingCloudTrafficManager'
-
-resource primaryAppServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: appServicePlanName
-  location: primaryLocation
-  sku: {
-    tier: 'Standard'
-    name: 'S1'
-    capacity: 1
-  }
-  properties: {
-    reserved: true
-  }
-}
-
-resource secondaryAppServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: '${appServicePlanName}-secondary'
-  location: secondaryLocation
-  sku: {
-    tier: 'Standard'
-    name: 'S1'
-    capacity: 1
-  }
-  properties: {
-    reserved: true
-  }
-}
-
-resource primaryWebApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: primaryWebAppName
+resource primaryContainerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: 'myPrimaryContainerAppEnv'
   location: primaryLocation
   properties: {
-    serverFarmId: primaryAppServicePlan.id
-    siteConfig: {
-      linuxFxVersion: 'NODE|20-lts'  // Primary web app runtime
-    }
   }
 }
 
-resource secondaryWebApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: secondaryWebAppName
+resource secondaryContainerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: 'mySecondaryContainerAppEnv'
   location: secondaryLocation
   properties: {
-    serverFarmId: secondaryAppServicePlan.id
-    siteConfig: {
-      linuxFxVersion: 'NODE|20-lts'  // Secondary web app runtime
-    }
   }
 }
 
-resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {
-  name: trafficManagerName
-  location: 'global'
-  properties: {
-    profileStatus: 'Enabled'
-    trafficRoutingMethod: 'Performance'  // Routing based on the best performing region
-    dnsConfig: {
-      relativeName: trafficManagerName
-      ttl: 30
-    }
-    monitorConfig: {
-      protocol: 'HTTP'
-      port: 80
-      path: '/'
-    }
-    endpoints: [
-      {
-        name: 'primaryEndpoint'
-        type: 'Microsoft.Network/trafficManagerProfiles/azureEndpoints'
-        properties: {
-          targetResourceId: primaryWebApp.id
-          endpointStatus: 'Enabled'
-        }
-      }
-      {
-        name: 'secondaryEndpoint'
-        type: 'Microsoft.Network/trafficManagerProfiles/azureEndpoints'
-        properties: {
-          targetResourceId: secondaryWebApp.id
-          endpointStatus: 'Enabled'
-        }
-      }
-    ]
-  }
-}
-
-resource primaryAutoScaleSettings 'Microsoft.Insights/autoscalesettings@2022-10-01' = {
-  name: '${primaryWebAppName}-autoscale'
+resource primaryContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'my-website-primary'
   location: primaryLocation
   properties: {
-    enabled: true
-    targetResourceUri: primaryAppServicePlan.id
-    profiles: [
-      {
-        name: 'autoscaleProfile'
-        capacity: {
-          minimum: '1'
-          maximum: '3'
-          default: '1'
+    managedEnvironmentId: primaryContainerAppEnvironment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 80
+      }
+      activeRevisionsMode: 'Multiple'
+      registries: [
+        {
+          server: 'scalingcontainers.azurecr.io'
+          identity: 'SystemAssigned'  
         }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          image: containerImage
+          name: 'my-website-primary-container'
+          resources: {
+            cpu: json('0.5')
+            memory: '1.0Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 10
         rules: [
           {
-            metricTrigger: {
-              metricName: 'CpuPercentage'
-              metricNamespace: 'Microsoft.Web/serverfarms'
-              metricResourceUri: primaryAppServicePlan.id
-              timeGrain: 'PT1M'
-              statistic: 'Average'
-              timeWindow: 'PT5M'
-              timeAggregation: 'Average'
-              operator: 'GreaterThan'
-              threshold: 70
-            }
-            scaleAction: {
-              direction: 'Increase'
-              type: 'ChangeCount'
-              value: '1'
-              cooldown: 'PT5M'
-            }
-          }
-          {
-            metricTrigger: {
-              metricName: 'CpuPercentage'
-              metricNamespace: 'Microsoft.Web/serverfarms'
-              metricResourceUri: primaryAppServicePlan.id
-              timeGrain: 'PT1M'
-              statistic: 'Average'
-              timeWindow: 'PT5M'
-              timeAggregation: 'Average'
-              operator: 'LessThan'
-              threshold: 30
-            }
-            scaleAction: {
-              direction: 'Decrease'
-              type: 'ChangeCount'
-              value: '1'
-              cooldown: 'PT5M'
+            name: 'http-scale-rule'
+            http: {
+              metadata: {
+                concurrentRequests: '50'
+              }
             }
           }
         ]
       }
-    ]
+    }
   }
 }
 
-resource secondaryAutoScaleSettings 'Microsoft.Insights/autoscalesettings@2022-10-01' = {
-  name: '${secondaryWebAppName}-autoscale'
+resource secondaryContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'my-website-secondary'
   location: secondaryLocation
   properties: {
-    enabled: true
-    targetResourceUri: secondaryAppServicePlan.id
-    profiles: [
-      {
-        name: 'autoscaleProfile'
-        capacity: {
-          minimum: '1'
-          maximum: '3'
-          default: '1'
+    managedEnvironmentId: secondaryContainerAppEnvironment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 80
+      }
+      activeRevisionsMode: 'Multiple'
+      registries: [
+        {
+          server: 'scalingcontainers.azurecr.io'
+          identity: 'SystemAssigned'  
         }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          image: containerImage
+          name: 'my-website-secondary-container'
+          resources: {
+            cpu: json('0.5')
+            memory: '1.0Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 10
         rules: [
           {
-            metricTrigger: {
-              metricName: 'CpuPercentage'
-              metricNamespace: 'Microsoft.Web/serverfarms'
-              metricResourceUri: secondaryAppServicePlan.id
-              timeGrain: 'PT1M'
-              statistic: 'Average'
-              timeWindow: 'PT5M'
-              timeAggregation: 'Average'
-              operator: 'GreaterThan'
-              threshold: 70
-            }
-            scaleAction: {
-              direction: 'Increase'
-              type: 'ChangeCount'
-              value: '1'
-              cooldown: 'PT5M'
-            }
-          }
-          {
-            metricTrigger: {
-              metricName: 'CpuPercentage'
-              metricNamespace: 'Microsoft.Web/serverfarms'
-              metricResourceUri: secondaryAppServicePlan.id
-              timeGrain: 'PT1M'
-              statistic: 'Average'
-              timeWindow: 'PT5M'
-              timeAggregation: 'Average'
-              operator: 'LessThan'
-              threshold: 30
-            }
-            scaleAction: {
-              direction: 'Decrease'
-              type: 'ChangeCount'
-              value: '1'
-              cooldown: 'PT5M'
+            name: 'http-scale-rule'
+            http: {
+              metadata: {
+                concurrentRequests: '50'
+              }
             }
           }
         ]
       }
-    ]
+    }
   }
 }
+
