@@ -37,7 +37,6 @@ This command maps port 8080 on your host machine to port 80 in the container, wh
 ```bash
 .
 ├── application.bicep        # Bicep file that declares a Container App in Azure
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
+├── ../.github/workflows/
+│       └── lab3-bicep-deploy.yml
 
