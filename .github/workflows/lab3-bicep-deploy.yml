@@ -15,6 +15,7 @@ env:
   LOCATION: swedencentral  # Default location for resources
   DOCKERHUB_USERNAME: danielfroding
   DOCKER_IMAGE_NAME: scalingcloud
+  DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
 
 jobs:
   deploy:
@@ -32,10 +33,10 @@ jobs:
         ./setup-massively.sh           # Execute the script
         cd ..
 
-    - name: Log in to Docker Hub
-      run: |
-        docker login -u $DOCKERHUB_USERNAME
-
+        - name: Log in to Docker Hub
+        run: |
+          echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+  
     # Step 3: Build and Push Docker Image
     - name: Build and push Docker image
       run: |
