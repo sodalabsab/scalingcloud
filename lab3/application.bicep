@@ -5,7 +5,7 @@ param location string = resourceGroup().location
 param environmentName string = 'appEnvironment'
 
 @description('Application Container Image')
-param applicationImage string = 'scalecontainers.azurecr.io/my-website:latest'
+param applicationImage string = 'danielfroding/scalingcloud'
 
 @description('Port for Application')
 param applicationPort int = 80
