@@ -5,116 +5,114 @@ param primaryLocation string = 'swedencentral'
 param secondaryLocation string = 'westeurope'
 
 @description('Container image for the web app from Azure Container Registry (ACR).')
-param containerImage string
+param containerImage string = 'DOCKER|danielfroding/scalingcloud'
 
 @description('Name of the Traffic Manager profile.')
-param trafficManagerName string = 'myTrafficManagerProfile'
+param trafficManagerName string = 'myUniqueTrafficManagerProfile123'
 
-resource primaryContainerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'myPrimaryContainerAppEnv'
+// App Service Plans
+resource primaryAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+  name: 'myPrimaryAppServicePlan'
   location: primaryLocation
+  sku: {
+    tier: 'Standard'
+    name: 'S1'
+  }
   properties: {
+    reserved: true // Indicates it's for Linux
   }
 }
 
-resource secondaryContainerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'mySecondaryContainerAppEnv'
+resource secondaryAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+  name: 'mySecondaryAppServicePlan'
   location: secondaryLocation
+  sku: {
+    tier: 'Standard'
+    name: 'S1'
+  }
   properties: {
+    reserved: true // Indicates it's for Linux
   }
 }
 
-resource primaryContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
+// Web Apps
+resource primaryWebApp 'Microsoft.Web/sites@2022-09-01' = {
   name: 'my-website-primary'
   location: primaryLocation
   properties: {
-    managedEnvironmentId: primaryContainerAppEnvironment.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-      }
-      activeRevisionsMode: 'Multiple'
-      registries: [
+    serverFarmId: primaryAppServicePlan.id
+    siteConfig: {
+      linuxFxVersion: containerImage
+      appSettings: [
         {
-          server: 'scalingcontainers.azurecr.io'
-          identity: 'SystemAssigned'  
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'false'
+        }
+        {
+          name: 'DOCKER_ENABLE_CI'
+          value: 'true'
         }
       ]
     }
-    template: {
-      containers: [
-        {
-          image: containerImage
-          name: 'my-website-primary-container'
-          resources: {
-            cpu: json('0.5')
-            memory: '1.0Gi'
-          }
-        }
-      ]
-      scale: {
-        minReplicas: 1
-        maxReplicas: 10
-        rules: [
-          {
-            name: 'http-scale-rule'
-            http: {
-              metadata: {
-                concurrentRequests: '50'
-              }
-            }
-          }
-        ]
-      }
-    }
+    httpsOnly: true
   }
 }
 
-resource secondaryContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
+resource secondaryWebApp 'Microsoft.Web/sites@2022-09-01' = {
   name: 'my-website-secondary'
   location: secondaryLocation
   properties: {
-    managedEnvironmentId: secondaryContainerAppEnvironment.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-      }
-      activeRevisionsMode: 'Multiple'
-      registries: [
+    serverFarmId: secondaryAppServicePlan.id
+    siteConfig: {
+      linuxFxVersion: containerImage
+      appSettings: [
         {
-          server: 'scalingcontainers.azurecr.io'
-          identity: 'SystemAssigned'  
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'false'
+        }
+        {
+          name: 'DOCKER_ENABLE_CI'
+          value: 'true'
         }
       ]
     }
-    template: {
-      containers: [
-        {
-          image: containerImage
-          name: 'my-website-secondary-container'
-          resources: {
-            cpu: json('0.5')
-            memory: '1.0Gi'
-          }
-        }
-      ]
-      scale: {
-        minReplicas: 1
-        maxReplicas: 10
-        rules: [
-          {
-            name: 'http-scale-rule'
-            http: {
-              metadata: {
-                concurrentRequests: '50'
-              }
-            }
-          }
-        ]
-      }
-    }
+    httpsOnly: true
   }
 }
 
+// Traffic Manager Profile
+resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {
+  name: trafficManagerName
+  location: 'global'
+  properties: {
+    profileStatus: 'Enabled'
+    trafficRoutingMethod: 'Performance'
+    dnsConfig: {
+      relativeName: trafficManagerName
+      ttl: 30
+    }
+    monitorConfig: {
+      protocol: 'HTTP'
+      port: 80
+      path: '/'
+    }
+    endpoints: [
+      {
+        name: 'primaryEndpoint'
+        type: 'Microsoft.Network/trafficManagerProfiles/AzureEndpoints'
+        properties: {
+          targetResourceId: primaryWebApp.id
+          endpointStatus: 'Enabled'
+        }
+      }
+      {
+        name: 'secondaryEndpoint'
+        type: 'Microsoft.Network/trafficManagerProfiles/AzureEndpoints'
+        properties: {
+          targetResourceId: secondaryWebApp.id
+          endpointStatus: 'Enabled'
+        }
+      }
+    ]
+  }
+}
