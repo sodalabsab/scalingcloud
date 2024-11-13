@@ -39,5 +39,5 @@ jobs:
         az deployment group create \
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
-          --template-file ${{ github.event.inputs.labPath }} + '/lab.bicep' \
+          --template-file ${{ github.event.inputs.labPath }}/lab.bicep \
           --mode Incremental
