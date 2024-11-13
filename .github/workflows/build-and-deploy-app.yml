@@ -1,4 +1,4 @@
-name: Lab3 Bicep Deployment
+name: Lab application build
 
 on: 
   push:

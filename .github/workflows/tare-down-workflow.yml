@@ -17,4 +17,5 @@ jobs:
     # Step 2: Delete the Resource Group using Azure CLI
     - name: Delete Resource Group
       run: |
-        az group delete --name ${{ secrets.AZURE_RESOURCE_GROUP }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --yes --no-wait
+        # Get all resource groups with the tag 'Project: Lab' and delete them
+        az group list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --yes --no-wait
