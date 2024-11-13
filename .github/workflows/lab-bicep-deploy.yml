@@ -31,7 +31,7 @@ jobs:
     # Step 3: Ensure the Resource Group exists (create if it doesn't exist)
     - name: Create Resource Group for ${{ github.event.inputs.labPath }}
       run: |
-        az group create --name ${{ secrets.AZURE_RESOURCE_GROUP }}/${{ github.event.inputs.labPath }} --location ${{ env.LOCATION }} \
+        az group create --name ${{ env.AZURE_RESOURCE_GROUP }}/${{ github.event.inputs.labPath }} --location ${{ env.LOCATION }} \
         --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Deploy Bicep file for ${{ github.event.inputs.labPath }}
