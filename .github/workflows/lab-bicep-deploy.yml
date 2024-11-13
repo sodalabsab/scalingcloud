@@ -10,7 +10,7 @@ on:
 
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}/${{ github.event.inputs.labPath }}
+  RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}${{ github.event.inputs.labPath }}
   LOCATION: swedencentral  # Default location for resources
 
 jobs:
