@@ -126,7 +126,7 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
       '/*'
     ]
     forwardingProtocol: 'HttpsOnly'
-    linkToDefaultDomain: 'Disabled'
+    linkToDefaultDomain: 'Enabled'
     httpsRedirect: 'Enabled'
   }
 }
