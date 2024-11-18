@@ -1,50 +1,59 @@
 // Parameters
+@description('Location for the App Service.')
 param location string = 'swedencentral'
-param containerGroupName string = 'nginxContainerGroup'
+
+@description('Unique name for the App Service.')
+param appServiceName string = 'my-scalingcloud-app'
+
+@description('App Service Plan Name')
+param appServicePlanName string = 'myAppServicePlan'
+
+@description('Unique name for the Front Door profile.')
+param frontDoorProfileName string = 'MyFrontDoorProfile'
+
+@description('Container image for the web app from Azure Container Registry (ACR).')
+param containerImage string = 'DOCKER|danielfroding/scalingcloud'
+
+@description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
+
+@description('SKU name for the Front Door profile.')
 param frontDoorSkuName string = 'Standard_AzureFrontDoor'
 
 // Variables for names
-var frontDoorProfileName = 'MyFrontDoorProfile'
 var frontDoorOriginGroupName = 'MyOriginGroup'
-var frontDoorOriginName = 'MyNginxOrigin'
+var frontDoorOriginName = 'MyAppOrigin'
 var frontDoorRouteName = 'MyRoute'
 
-// Nginx Container Group with Storage Mount and Startup Command
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
-  name: containerGroupName
+// App Service Plan
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: appServicePlanName
+  location: location
+  sku: {
+    name: 'S1'
+    tier: 'Standard'
+  }
+  properties: {
+    reserved: true // Set to true for Linux-based App Service
+  }
+}
+
+// App Service
+resource appService 'Microsoft.Web/sites@2022-03-01' = {
+  name: appServiceName
   location: location
   properties: {
-    containers: [
-      {
-        name: 'my-website'
-        properties: {
-          image: 'nginx:latest'
-          ports: [
-            {
-              port: 80
-            }
-          ]
-          resources: {
-            requests: {
-              cpu: 1
-              memoryInGB: 1
-            }
-          }
-        }
-      }
-    ]
-    osType: 'Linux'
-    ipAddress: {
-      type: 'Public'
-      ports: [
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      appSettings: [
         {
-          protocol: 'TCP'
-          port: 80
+          name: 'WEBSITES_PORT'
+          value: '80' // Required for containerized app to listen on port 80
         }
       ]
-      dnsNameLabel: containerGroupName
+      linuxFxVersion: containerImage // Using Docker image from Docker Hub
     }
+    httpsOnly: true
   }
 }
 
@@ -90,9 +99,9 @@ resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01
   name: frontDoorOriginName
   parent: frontDoorOriginGroup
   properties: {
-    hostName: containerGroup.properties.ipAddress.fqdn
+    hostName: appService.properties.defaultHostName
     httpPort: 80
-    originHostHeader: containerGroup.properties.ipAddress.fqdn
+    originHostHeader: appService.properties.defaultHostName
     priority: 1
     weight: 1000
   }
@@ -111,16 +120,31 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
     }
     supportedProtocols: [
       'Http'
+      'Https'
     ]
     patternsToMatch: [
       '/*'
     ]
-    forwardingProtocol: 'HttpOnly'
+    forwardingProtocol: 'HttpsOnly'
     linkToDefaultDomain: 'Enabled'
-    httpsRedirect: 'Disabled'
+    httpsRedirect: 'Enabled'
+    cacheConfiguration: {
+      queryParameters: 'Ignore'
+      
+      compressionSettings: {
+        isCompressionEnabled: true // Enable compression
+        contentTypesToCompress: [
+          'text/plain'
+          'text/html'
+          'application/json'
+          'text/css'
+          'application/javascript'
+        ]
+      }
+    }
   }
 }
 
 // Outputs
-output containerGroupHostName string = containerGroup.properties.ipAddress.fqdn
+output appServiceFqdn string = appService.properties.defaultHostName
 output frontDoorEndpointHostName string = frontDoorEndpoint.properties.hostName
