@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check } from 'k6';
 
 // Target URL (modify to point to your Nginx load-balanced endpoint)
-const url = 'http://my-nginx';
+const url = 'https://application.livelybeach-f13fa033.swedencentral.azurecontainerapps.io/';
 
 export let options = {
   vus: 100,           // Number of virtual users

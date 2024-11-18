@@ -1,15 +1,18 @@
 // Parameters
-@description('Location for the Container App.')
+@description('Location for the App Service.')
 param location string = 'swedencentral'
 
-@description('Unique name for the Container App.')
-param containerAppName string = 'my-scalingcloud-app'
+@description('Unique name for the App Service.')
+param appServiceName string = 'my-scalingcloud-app'
 
-@description('Application Container Image')
-param applicationImage string = 'danielfroding/scalingcloud'
+@description('App Service Plan Name')
+param appServicePlanName string = 'myAppServicePlan'
 
 @description('Unique name for the Front Door profile.')
 param frontDoorProfileName string = 'MyFrontDoorProfile'
+
+@description('Container image for the web app from Azure Container Registry (ACR).')
+param containerImage string = 'DOCKER|danielfroding/scalingcloud'
 
 @description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
@@ -17,64 +20,40 @@ param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 @description('SKU name for the Front Door profile.')
 param frontDoorSkuName string = 'Standard_AzureFrontDoor'
 
-@description('Minimum number of replicas')
-param minReplicas int = 3 // Increased to start with 3 containers
-
-@description('Maximum number of replicas')
-param maxReplicas int = 20 
-
 // Variables for names
 var frontDoorOriginGroupName = 'MyOriginGroup'
 var frontDoorOriginName = 'MyAppOrigin'
 var frontDoorRouteName = 'MyRoute'
 
-// Container App Environment
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'myContainerAppEnv'
+// App Service Plan
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: appServicePlanName
   location: location
-  properties: {}
+  sku: {
+    name: 'B1' // Adjust the SKU as needed (e.g., B1 for Basic, S1 for Standard)
+    tier: 'Basic'
+  }
+  properties: {
+    reserved: true // Set to true for Linux-based App Service
+  }
 }
 
-// Container App
-resource applicationContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: containerAppName
+// App Service
+resource appService 'Microsoft.Web/sites@2022-03-01' = {
+  name: appServiceName
   location: location
   properties: {
-    managedEnvironmentId: containerAppEnv.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-        transport: 'auto'
-      }
-    }
-    template: {
-      scale: {
-        minReplicas: minReplicas
-        maxReplicas: maxReplicas
-        rules: [
-          {
-            name: 'http-requests-scaling'
-            custom: {
-              type: 'http'
-              metadata: {
-                concurrentRequests: string(50)
-              }
-            }
-          }
-        ]
-      }
-      containers: [
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      appSettings: [
         {
-          name: 'application'
-          image: applicationImage
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
+          name: 'WEBSITES_PORT'
+          value: '80' // Required for containerized app to listen on port 80
         }
       ]
+      linuxFxVersion: containerImage // Using Docker image from Docker Hub
     }
+    httpsOnly: true
   }
 }
 
@@ -120,9 +99,9 @@ resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01
   name: frontDoorOriginName
   parent: frontDoorOriginGroup
   properties: {
-    hostName: applicationContainerApp.properties.configuration.ingress.fqdn
+    hostName: appService.properties.defaultHostName
     httpPort: 80
-    originHostHeader: applicationContainerApp.properties.configuration.ingress.fqdn
+    originHostHeader: appService.properties.defaultHostName
     priority: 1
     weight: 1000
   }
@@ -141,16 +120,17 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
     }
     supportedProtocols: [
       'Http'
+      'Https'
     ]
     patternsToMatch: [
       '/*'
     ]
-    forwardingProtocol: 'HttpOnly'
-    linkToDefaultDomain: 'Enabled'
-    httpsRedirect: 'Disabled'
+    forwardingProtocol: 'HttpsOnly'
+    linkToDefaultDomain: 'Disabled'
+    httpsRedirect: 'Enabled'
   }
 }
 
 // Outputs
-output containerAppFqdn string = applicationContainerApp.properties.configuration.ingress.fqdn
+output appServiceFqdn string = appService.properties.defaultHostName
 output frontDoorEndpointHostName string = frontDoorEndpoint.properties.hostName
