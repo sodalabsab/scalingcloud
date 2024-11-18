@@ -128,6 +128,20 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
     forwardingProtocol: 'HttpsOnly'
     linkToDefaultDomain: 'Enabled'
     httpsRedirect: 'Enabled'
+    cacheConfiguration: {
+      queryParameters: 'Ignore'
+      
+      compressionSettings: {
+        isCompressionEnabled: true // Enable compression
+        contentTypesToCompress: [
+          'text/plain'
+          'text/html'
+          'application/json'
+          'text/css'
+          'application/javascript'
+        ]
+      }
+    }
   }
 }
 
