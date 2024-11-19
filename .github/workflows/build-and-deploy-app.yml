@@ -24,7 +24,8 @@ jobs:
     - name: Run setup script
       run: |
         run: |
-          pwd
+          cd lab1
+          ls -la
           chmod +x setup-massively.sh    # Ensure the script is executable
           ./setup-massively.sh           # Execute the script
 

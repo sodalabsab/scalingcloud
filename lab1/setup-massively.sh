@@ -3,7 +3,7 @@
 # Define the URL for the Massively template and target directory
 TEMPLATE_URL="https://html5up.net/massively/download"
 TARGET_DIR="html"
- 
+
 # Download the Massively template
 echo "Downloading HTML5 UP Massively template..."
 curl -L -o massively.zip "$TEMPLATE_URL"
