@@ -1,6 +1,5 @@
 # Lab 1 - A simple container in Docker Setup
-
-This repository contains a simple Docker setup for an Nginx server, which serves static files from a specified directory. A scrip will fill that directory with content from html5up and a website framework called massively.
+This directory contains a simple Docker setup with an Nginx server, that serves static files from a specified directory. A scrip will fill that directory with content from html5up and a website framework called massively.
 
 ## Contents
 
@@ -8,19 +7,17 @@ This repository contains a simple Docker setup for an Nginx server, which serves
 - **setup-massively.sh**: Script to dowload and extract [massively](https://html5up.net/massively) to a html directory that acts as web content for the webserver.
 - **setup-massively.bat**: Same script for windows
 
-## Getting Started
 
 ### Prerequisites
 
-- [Docker](https://www.docker.com/) must be installed on your machine. If not, go to the link and install it.
+- Complete Setup 1 in the readme-file at the root of the repo.
 
-### Setup
+### Execution
 
 1.	Download and setup the massively web-framework by running the script:
 
       ```bash
       ./setup-massively.sh
-
 2.	Build a Docker image and give it a name by executing this command:
       ```bash
       docker build -t my-website .
@@ -30,11 +27,11 @@ This repository contains a simple Docker setup for an Nginx server, which serves
       
 This command maps port 8080 on your host machine to port 80 in the container, where Nginx is listening and serving the content in the html directory.
 
-Accessing the Application
+### Accessing the Application
 
 Open your browser and go to http://localhost:8080 to view the served static files.
 
-File Structure
+### File Structure
 ```bash
       .
       ├── Dockerfile         # Dockerfile to set up the Nginx container

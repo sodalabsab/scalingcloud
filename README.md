@@ -60,14 +60,15 @@ This course will guide you through scaling cloud applications using Docker and A
 7. **Open the code in VS Code**
    - Start VS Code and open the directory by selecting "Open folder..." from the File meny
 
-
 # Part two - move to the cloud
 
-5. **Azure Account**
-   - Sign up: [https://azure.microsoft.com/free/](https://azure.microsoft.com/free/)
-   - Ensure your subscription is active.
+This part explores some of the avaliable tools to build, deploy and monitor applications in Azure. There are a few things required to be setup to be able to run the labs. 
 
-6. **Azure CLI**
+1. **Azure Account**
+   - Sign up: [https://azure.microsoft.com/free/](https://azure.microsoft.com/free/)
+   - Ensure your subscription is active (you should be able to create a free tier subscriptioin)
+
+2. **Azure CLI**
    - Install from: [https://docs.microsoft.com/en-us/cli/azure/install-azure-cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
    - Log in to your Azure account:
      ```bash
@@ -84,15 +85,11 @@ This course will guide you through scaling cloud applications using Docker and A
      az bicep version
      ```
 
-
-## Environment Setup for Azure Bicep Deployment
+## GitHub actions Setup for Azure Bicep Deployment
 
 ### Configure GitHub Secrets
 
-You need to configure the following GitHub Secrets in your repository for secure deployment:
-
-- **`AZURE_SUBSCRIPTION_ID`**: Your Azure subscription ID.
-- **`AZURE_RESOURCE_GROUP`**: The name of your resource group. If it doesn't exist, it will be created.
+You need to configure the following GitHub Secrets in your repository for secure deployment. These secrets are referenced in the actions workflows and in bicep files.
 
 #### Steps to Configure Secrets
 
@@ -100,26 +97,20 @@ You need to configure the following GitHub Secrets in your repository for secure
 2. Navigate to **Secrets and variables** > **Actions**.
 3. Add the following secrets:
    - `AZURE_SUBSCRIPTION_ID`: Your Azure subscription ID.
-   - `AZURE_RESOURCE_GROUP`: The name of the resource group.
+   - `AZURE_RESOURCE_GROUP`: Provide a suitable name of the resource groups that will be created and used for the labs.
 
 
 ### Setting Up Azure Credentials in GitHub
 
-To deploy Azure resources using GitHub Actions, you need to create and configure Azure credentials securely in your GitHub repository. Here's how to do it:
+To deploy Azure resources using GitHub Actions, you need to create and configure Azure credentials securely in your GitHub repository. We need to create a service principal (server account) in Azure and give to GitHub to allow access from GitHub Actions into Azure. Here's how to do it:
 
-1. **Log in to Azure CLI**
-   - Open your terminal and log in to Azure using the Azure CLI:
-     ```bash
-     az login
-     ```
-   - Follow the instructions to complete the authentication process.
-
-2. **Create a Service Principal**
+1. **Create a Service Principal**
    - Run the following command to create a new service principal and capture the output, which includes your `appId`, `password`, and `tenant`:
      ```bash
-     az ad sp create-for-rbac --name "github-actions-deploy" --role contributor --scopes /subscriptions/<AZURE_SUBSCRIPTION_ID>
+     az account show --query id --output tsv 
+     az ad sp create-for-rbac --name "github-actions-deploy" --role contributor --scopes /subscriptions/<AZURE_SUBSCRIPTION_ID> --sdk-auth
      ```
-   - Replace `<AZURE_SUBSCRIPTION_ID>` with your actual Azure subscription ID.
+   - Replace `<AZURE_SUBSCRIPTION_ID>` with your actual Azure subscription ID from the first command. (You can also find the subscription ID in the portal)
    - The output will look like this:
      ```json
      {
@@ -134,16 +125,7 @@ To deploy Azure resources using GitHub Actions, you need to create and configure
    - Go to your GitHub repository and navigate to **Settings**.
    - Under **Secrets and variables**, click on **Actions**.
    - Click **New repository secret** and add a secret named `AZURE_CREDENTIALS`.
-   - The value of the `AZURE_CREDENTIALS` secret should be a JSON string containing your credentials. Format the JSON like this:
-     ```json
-     {
-       "clientId": "YOUR_APP_ID",
-       "clientSecret": "YOUR_PASSWORD",
-       "subscriptionId": "<AZURE_SUBSCRIPTION_ID>",
-       "tenantId": "YOUR_TENANT_ID"
-     }
-     ```
-   - Replace `YOUR_APP_ID`, `YOUR_PASSWORD`, `YOUR_TENANT_ID`, and `<AZURE_SUBSCRIPTION_ID>` with the values from the service principal you created.
+   - Past in the JSON ouput from step 2 so that `AZURE_CREDENTIALS` secret is a JSON string containing your credentials.
 
 ---
 
@@ -219,7 +201,7 @@ This will build and deploy the web application to your Azure environment.
 
 ## Tearing Down the Environment
 
-To remove all resources and delete the resource group:
+To remove all resources and delete the resource groups created in the labs. They all have the tag: `Project=scalingCloudLab`
 
 ```bash
-az group delete --name <AZURE_RESOURCE_GROUP> --subscription <AZURE_SUBSCRIPTION_ID> --yes --no-wait
+az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait

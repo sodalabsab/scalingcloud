@@ -28,7 +28,7 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 }
 
 // Deploy the Application Container as a Container App with public ingress
-resource applicationContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: 'application'
   location: location
   properties: {
@@ -70,4 +70,4 @@ resource applicationContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-output applicationUrl string = 'https://${applicationContainerApp.properties.configuration.ingress.fqdn}'
+output applicationUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'

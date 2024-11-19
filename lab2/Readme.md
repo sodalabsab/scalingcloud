@@ -11,33 +11,28 @@ This lab demonstrates how to set up an Nginx reverse proxy in a Docker container
 ## Getting Started
 
 ### Prerequisites
-
-- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) must be installed on your machine. If not, go to the links and install them.
 - [K6](https://k6.io/) must be installed for running load tests. Follow the instructions on the K6 website to install it.
-
 
 ### Setup
 
-1. Create a custom Docker image named `my-website` using your existing Docker setup for serving static content. Refer to Lab 1 if you need guidance on building the image:
-
-   ```bash
-   docker build -t my-website .
+1. Create a custom Docker image named `my-website` using your existing Docker setup for serving static content. If you did lab1 before this, there is already an image avaliable in docker. Othervise, refer to Lab 1 if you need guidance on building the image:
 
 2. Start the services using Docker Compose by executing this command in the project directory:
 
    ```bash
    docker compose up -d --scale my-website=3
 
-This command starts both the nginx service and the my-website service. The Nginx container listens on port 8080 and forwards requests to the backend web server.
+This command starts both the nginx service and three instances of the my-website container. The Nginx container listens on port 8080 and forwards requests to the backend web server.
 
-Accessing the Application
+### Accessing the Application
 
 Open your browser and go to http://localhost:8080 to view the content served through the Nginx reverse proxy.
 
 ### Running the Load Test
 1. Run a load test using the following command:
     ```bash
-    k6 run loadtest.js
+    k6 run load.js
+    ```
 
 This command will simulate 100 virtual users sending requests to the Nginx server over a duration of 10 seconds.
 
@@ -49,11 +44,12 @@ This command will simulate 100 virtual users sending requests to the Nginx serve
 * Changing the Number of Backend Instances by adjusting the --scale Flag
 When starting your Docker Compose setup, use the --scale flag to specify the desired number of instances for my-website. For example, if you want to run 10 instances instead of 3, you would use:
    ```bash
-   docker compose up -d --scale my-website=10
+   docker compose scale my-website=10
+   ```
+Docker will start 7 additional containers on the fly. Test it and run the load test again to se if the performance changes.
 
-This command can be given even when the application is running. Docker will start 7 additional containers on the fly. Test it and run the load test again to se if the performance changes.
 
-File Structure
+### File Structure
 ```bash
 .
 ├── docker-compose.yml  # Docker Compose configuration for Nginx and the backend
