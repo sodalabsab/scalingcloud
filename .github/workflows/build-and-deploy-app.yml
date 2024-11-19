@@ -24,9 +24,10 @@ jobs:
     - name: Run setup script
       run: |
         run: |
+          pwd
           chmod +x setup-massively.sh    # Ensure the script is executable
           ./setup-massively.sh           # Execute the script
-          
+
     - name: Log in to Docker Hub
       run: |
         echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
