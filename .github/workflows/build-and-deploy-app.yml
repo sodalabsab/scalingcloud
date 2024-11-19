@@ -25,7 +25,7 @@ jobs:
       run: |
         run: |
           cd lab1
-          chmod +x ./setup-massively.sh  # Ensure the script is executable
+          chmod +x setup-massively.sh  # Ensure the script is executable
           ./setup-massively.sh           # Execute the script
           cd ..
 
