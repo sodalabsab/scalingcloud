@@ -24,11 +24,9 @@ jobs:
     - name: Run setup script
       run: |
         run: |
-          cd lab1
-          chmod +x setup-massively.sh  # Ensure the script is executable
+          chmod +x setup-massively.sh    # Ensure the script is executable
           ./setup-massively.sh           # Execute the script
-          cd ..
-
+          
     - name: Log in to Docker Hub
       run: |
         echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin

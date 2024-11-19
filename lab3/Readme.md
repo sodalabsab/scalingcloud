@@ -16,7 +16,6 @@ This lab demonstrates deploying a simple Container App to Azure using Bicep and 
 ## File Structure
 ```bash
 .
-├── application.bicep        # Bicep file that declares a Container App in Azure
-├── ../.github/workflows/
-│       └── lab3-bicep-deploy.yml
+├── lab.bicep        # Bicep file that declares a Container App in Azure
+
 
