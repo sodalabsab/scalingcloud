@@ -1,5 +1,5 @@
 #!/bin/bash
-
+ 
 # Define the URL for the Massively template and target directory
 TEMPLATE_URL="https://html5up.net/massively/download"
 TARGET_DIR="html"
