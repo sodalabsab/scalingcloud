@@ -1,7 +1,0 @@
-az group create -l swedencentral -n sodaScale2
-az acr create -n scalecontainers --sku=basic --resource-group scalingcloudgroup -l swedencentral
-Gå in och fixa nykeln i portalen
-az containerapp up --registry-server scalecontainers.azurecr.io --resource-group sodaScale2 -l swedencentral -n my-website --source .
-
-För att låta github göra pull från ACR
-az role assignment create --assignee 88640f4d-c517-4b1c-ba39-f14a2133d05c --role "AcrPull" --scope /subscriptions/d86cebd6-fb50-43ff-93a0-74fa9380bb54/resourceGroups/scalingcloudgroup/providers/Microsoft.ContainerRegistry/registries/scalecontainers
