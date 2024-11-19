@@ -1,14 +1,12 @@
-# Cloud Scaling Course - Azure Bicep Deployment Workflow
+# Scaling Cloud Course
 
-This course will guide you through scaling cloud applications using Docker and Azure services, with a focus on Bicep deployments. Below are detailed instructions for setting up your environment, configuring Azure, and deploying infrastructure and applications.
+This course will guide you through scaling cloud applications using Docker and Azure services, with a focus on Bicep deployments. Below are detailed instructions for cloning the course code, setting up your local environment, configuring and integrating accounts, and deploying infrastructure and applications.
 
 ---
 
 ## Setup 1
 
-Before starting, ensure you have all the necessary tools installed and accounts configured.
-
-### Tools and Accounts Setup
+### Tools and Accounts Setup for lab 1 and 2
 
 1. **Microsoft Visual Studio Code (VS Code)**
    - Download and install from: [https://code.visualstudio.com/](https://code.visualstudio.com/)
@@ -31,10 +29,10 @@ Before starting, ensure you have all the necessary tools installed and accounts 
    - Configure a Personal Access Token for GitHub Actions:
      - Go to **Settings** > **Developer settings** > **Personal access tokens**.
 
-4. **Clone the course Repository into your Account**
-   - Go to "repostitories" and click on the small + sign top right
+4. **Clone the course Repository into your GitHub Account**
+   - In your GitHub home screen, click on the small + sign top right
    - Select "Import repository" paste the [URL of the course reporitory](https://github.com/sodalabsab/scalingcloud.git)
-   - Name the repository "scalecloud" and select private
+   - Name the repository "scalecloud" and select private, this will import the course code into your account, giving you a local copy
 
 5. **Download the repository localy**
    - Go to the newly created repo in your github account and click on the green "<>Code" button. Copy the SSH URL:
@@ -42,7 +40,7 @@ Before starting, ensure you have all the necessary tools installed and accounts 
      git clone git@github.com:<your-username>/scalecloud.git
      ```
    - Replace `<your-username>` with your GitHub username.
-   - Cd into the repo:
+   - Change directory into the repo:
      ```bash
      cd scalecloud
      ```
