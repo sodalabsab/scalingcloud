@@ -100,7 +100,7 @@ resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01
   parent: frontDoorOriginGroup
   properties: {
     hostName: containerApp.properties.configuration.ingress.fqdn
-    httpPort: 8080
+    httpPort: 80
     originHostHeader: containerApp.properties.configuration.ingress.fqdn
     priority: 1
     weight: 1000
