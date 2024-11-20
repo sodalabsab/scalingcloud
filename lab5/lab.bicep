@@ -1,69 +1,43 @@
 @description('Location for the Container App Environment.')
 param location string = 'swedencentral'
 
-@description('Name of the Container App Environment.')
-param environmentName string = 'appEnvironment'
-
 @description('Application Container Image.')
 param applicationImage string = 'danielfroding/scalingcloud'
-
-@description('Port for the Application.')
-param applicationPort int = 80
-
-@description('Minimum number of replicas.')
-param minReplicas int = 3 // Increased to start with 3 containers
-
-@description('Maximum number of replicas.')
-param maxReplicas int = 20 // Allow scaling up to 20 containers
-
-@description('Target average number of requests per second per replica.')
-param targetRequests int = 50
-
-@description('Unique name for the Front Door profile.')
-param frontDoorProfileName string = 'MyFrontDoorProfile'
 
 @description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 
-@description('SKU name for the Front Door profile.')
-param frontDoorSkuName string = 'Standard_AzureFrontDoor'
-
-// Variables for names
-var frontDoorOriginGroupName = 'MyOriginGroup'
-var frontDoorOriginName = 'MyAppOrigin'
-var frontDoorRouteName = 'MyRoute'
-
 // Create a Container App Environment
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: environmentName
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: 'appEnvironment'
   location: location
   properties: {}
 }
 
 // Deploy the Application Container as a Container App with public ingress
-resource applicationContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'application'
+resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'my-website'
   location: location
   properties: {
-    managedEnvironmentId: containerAppEnv.id
+    managedEnvironmentId: containerAppEnvironment.id
     configuration: {
       ingress: {
         external: true
-        targetPort: applicationPort
+        targetPort: 80
         transport: 'auto'
       }
     }
     template: {
       scale: {
-        minReplicas: minReplicas
-        maxReplicas: maxReplicas
+        minReplicas: 3
+        maxReplicas: 20
         rules: [
           {
             name: 'http-requests-scaling'
             custom: {
               type: 'http'
               metadata: {
-                concurrentRequests: string(targetRequests)
+                concurrentRequests: string(20)
               }
             }
           }
@@ -71,7 +45,7 @@ resource applicationContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
       containers: [
         {
-          name: 'application'
+          name: 'my-website'
           image: applicationImage
           resources: {
             cpu: json('0.25')
@@ -85,10 +59,10 @@ resource applicationContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 // Front Door Profile
 resource frontDoorProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
-  name: frontDoorProfileName
+  name: 'MyFrontDoorProfile'
   location: 'global'
   sku: {
-    name: frontDoorSkuName
+    name: 'Standard_AzureFrontDoor'
   }
 }
 
@@ -104,7 +78,7 @@ resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' = {
 
 // Front Door Origin Group
 resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
-  name: frontDoorOriginGroupName
+  name: 'MyOriginGroup'
   parent: frontDoorProfile
   properties: {
     loadBalancingSettings: {
@@ -122,12 +96,12 @@ resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' =
 
 // Front Door Origin
 resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
-  name: frontDoorOriginName
+  name: 'MyAppOrigin'
   parent: frontDoorOriginGroup
   properties: {
-    hostName: applicationContainerApp.properties.configuration.ingress.fqdn
-    httpPort: applicationPort
-    originHostHeader: applicationContainerApp.properties.configuration.ingress.fqdn
+    hostName: containerApp.properties.configuration.ingress.fqdn
+    httpPort: 80
+    originHostHeader: containerApp.properties.configuration.ingress.fqdn
     priority: 1
     weight: 1000
   }
@@ -135,7 +109,7 @@ resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01
 
 // Front Door Route
 resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
-  name: frontDoorRouteName
+  name: 'MyRoute'
   parent: frontDoorEndpoint
   dependsOn: [
     frontDoorOrigin
@@ -158,5 +132,5 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
 }
 
 // Outputs
-output applicationUrl string = 'https://${applicationContainerApp.properties.configuration.ingress.fqdn}'
+output applicationUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output frontDoorEndpointHostName string = frontDoorEndpoint.properties.hostName
