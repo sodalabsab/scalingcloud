@@ -8,12 +8,10 @@ This lab demonstrates how to set up an Nginx reverse proxy in a Docker container
 - **nginx.conf**: Nginx configuration file for setting up the reverse proxy.
 - **load.js**: K6 script for load testing the Nginx load balancer.
 
-## Getting Started
-
 ### Prerequisites
 - [K6](https://k6.io/) must be installed for running load tests. Follow the instructions on the K6 website to install it.
 
-### Setup
+### Execution
 
 1. Create a custom Docker image named `my-website` using your existing Docker setup for serving static content. If you did lab1 before this, there is already an image avaliable in docker. Othervise, refer to Lab 1 if you need guidance on building the image:
 

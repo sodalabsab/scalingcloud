@@ -60,7 +60,7 @@ This course will guide you through scaling cloud applications using Docker and A
 7. **Open the code in VS Code**
    - Start VS Code and open the directory by selecting "Open folder..." from the File meny
 
-# Part two - move to the cloud
+# Setup 2 - move to the cloud
 
 This part explores some of the avaliable tools to build, deploy and monitor applications in Azure. There are a few things required to be setup to be able to run the labs. 
 
@@ -68,7 +68,7 @@ This part explores some of the avaliable tools to build, deploy and monitor appl
    - Sign up: [https://azure.microsoft.com/free/](https://azure.microsoft.com/free/)
    - Ensure your subscription is active (you should be able to create a free tier subscriptioin)
 
-2. **Azure CLI**
+2. **(Optional) Azure CLI**
    - Install from: [https://docs.microsoft.com/en-us/cli/azure/install-azure-cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
    - Log in to your Azure account:
      ```bash
@@ -203,5 +203,10 @@ This will build and deploy the web application to your Azure environment.
 
 To remove all resources and delete the resource groups created in the labs. They all have the tag: `Project=scalingCloudLab`
 
+There are two ways to delete all of them. 
+1. Go to the "action" tab in your GitHub account and select the `Lab bicep deployment` workflow to the left, click on "Run workflow", this will start a workflow that thoes the same thing as described below:
+2. If you have Azure CLI and is loggedin to your subscription run this command in a terminal:
+
 ```bash
 az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
+```

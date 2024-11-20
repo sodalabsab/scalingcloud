@@ -8,7 +8,7 @@ var k6Command = '''echo "$K6_SCRIPT" > /tmp/script.js && k6 run /tmp/script.js''
 // Container Group
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: 'k6-container'
-  location: 'eastus'
+  location: 'westus'
   properties: {
     containers: [
       {

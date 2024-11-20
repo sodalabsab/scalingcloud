@@ -1,4 +1,4 @@
-name: Lab application build
+name: Build and push application
 
 on: 
   push:
