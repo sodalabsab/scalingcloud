@@ -1,28 +1,12 @@
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-@description('Name of the Container App Environment')
-param environmentName string = 'appEnvironment'
-
 @description('Application Container Image')
 param applicationImage string = 'danielfroding/scalingcloud'
 
-@description('Port for Application')
-param applicationPort int = 80
-
-@description('Minimum number of replicas')
-param minReplicas int = 3 // Increased to start with 3 containers
-
-@description('Maximum number of replicas')
-param maxReplicas int = 20 // Allow scaling up to 20 containers
-
-@description('Target average number of requests per second per replica')
-param targetRequests int = 10
-
-
 // Create a Container App Environment
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: environmentName
+  name: 'appEnvironment'
   location: location
   properties: {}
 }
@@ -36,21 +20,21 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       ingress: {
         external: true
-        targetPort: applicationPort
+        targetPort: 80
         transport: 'auto'
       }
     }
     template: {
       scale: {
-        minReplicas: minReplicas
-        maxReplicas: maxReplicas
+        minReplicas: 3
+        maxReplicas: 20
         rules: [
           {
             name: 'http-requests-scaling'
             custom: {
               type: 'http'
               metadata: {
-                concurrentRequests: string(targetRequests)
+                concurrentRequests: string(20)
               }
             }
           }
