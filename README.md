@@ -56,6 +56,8 @@ This course will guide you through scaling cloud applications using Docker and A
      ```bash
      docker --version
      ```
+7. **DockerHub**
+   - Login or sign up for a DockerHub account at [https://www.dockerhub.com/](https://www.dockerhub.com/)
 
 7. **Open the code in VS Code**
    - Start VS Code and open the directory by selecting "Open folder..." from the File meny
@@ -98,7 +100,8 @@ You need to configure the following GitHub Secrets in your repository for secure
 3. Add the following secrets:
    - `AZURE_SUBSCRIPTION_ID`: Your Azure subscription ID.
    - `AZURE_RESOURCE_GROUP`: Provide a suitable name of the resource groups that will be created and used for the labs.
-
+   - `DOCKERHUB_PASSWORD`: Your password to dockerhub.com (used for rebuilding and pushing a new version of `my-website`) 
+   - `DOCKERHUB_IMAGE`: The name of your image that ws pushed to dockerhub.com in lab1. It will be used as input into the bicep file that sets up the labs in azure.  
 
 ### Setting Up Azure Credentials in GitHub
 
