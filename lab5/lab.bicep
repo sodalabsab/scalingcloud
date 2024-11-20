@@ -1,136 +1,39 @@
-@description('Location for the Container App Environment.')
-param location string = 'swedencentral'
 
-@description('Application Container Image.')
-param applicationImage string = 'danielfroding/scalingcloud'
+// Simple k6 load testing script embedded as a multi-line string
+var k6Script = 'import http from "k6/http";\nimport { sleep } from "k6";\n\nexport let options = {\n vus: 10,\n  duration: "30s",\n};\n\nexport default function () {\n  http.get("https://afd-n52wjysptfp6a-gkapgdf0fxfecya9.z01.azurefd.net/");\n  sleep(1);\n}'
 
-@description('Unique name for the Front Door endpoint.')
-param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
+// Command to run the k6 script
+var k6Command = '''echo "$K6_SCRIPT" > /tmp/script.js && k6 run /tmp/script.js'''
 
-// Create a Container App Environment
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'appEnvironment'
-  location: location
-  properties: {}
-}
-
-// Deploy the Application Container as a Container App with public ingress
-resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'my-website'
-  location: location
+// Container Group
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
+  name: 'k6-container'
+  location: 'eastus'
   properties: {
-    managedEnvironmentId: containerAppEnvironment.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-        transport: 'auto'
-      }
-    }
-    template: {
-      scale: {
-        minReplicas: 3
-        maxReplicas: 20
-        rules: [
-          {
-            name: 'http-requests-scaling'
-            custom: {
-              type: 'http'
-              metadata: {
-                concurrentRequests: string(20)
-              }
+    containers: [
+      {
+        name: 'k6-container'
+        properties: {
+          image: 'grafana/k6'
+          resources: {
+            requests: {
+              cpu: 1
+              memoryInGB: 1
             }
           }
-        ]
-      }
-      containers: [
-        {
-          name: 'my-website'
-          image: applicationImage
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
+          environmentVariables: [
+            {
+              name: 'K6_SCRIPT'
+              value: k6Script
+            }
+          ]
+          command: [
+            '/bin/sh', '-c', k6Command
+          ]
         }
-      ]
-    }
-  }
-}
-
-// Front Door Profile
-resource frontDoorProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
-  name: 'MyFrontDoorProfile'
-  location: 'global'
-  sku: {
-    name: 'Standard_AzureFrontDoor'
-  }
-}
-
-// Front Door Endpoint
-resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' = {
-  name: frontDoorEndpointName
-  parent: frontDoorProfile
-  location: 'global'
-  properties: {
-    enabledState: 'Enabled'
-  }
-}
-
-// Front Door Origin Group
-resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
-  name: 'MyOriginGroup'
-  parent: frontDoorProfile
-  properties: {
-    loadBalancingSettings: {
-      sampleSize: 4
-      successfulSamplesRequired: 3
-    }
-    healthProbeSettings: {
-      probePath: '/'
-      probeRequestType: 'HEAD'
-      probeProtocol: 'Http'
-      probeIntervalInSeconds: 120
-    }
-  }
-}
-
-// Front Door Origin
-resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
-  name: 'MyAppOrigin'
-  parent: frontDoorOriginGroup
-  properties: {
-    hostName: containerApp.properties.configuration.ingress.fqdn
-    httpPort: 80
-    originHostHeader: containerApp.properties.configuration.ingress.fqdn
-    priority: 1
-    weight: 1000
-  }
-}
-
-// Front Door Route
-resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
-  name: 'MyRoute'
-  parent: frontDoorEndpoint
-  dependsOn: [
-    frontDoorOrigin
-  ]
-  properties: {
-    originGroup: {
-      id: frontDoorOriginGroup.id
-    }
-    supportedProtocols: [
-      'Http'
-      'Https'
+      }
     ]
-    patternsToMatch: [
-      '/*'
-    ]
-    forwardingProtocol: 'HttpsOnly'
-    linkToDefaultDomain: 'Enabled'
-    httpsRedirect: 'Enabled'
+    osType: 'Linux'
+    restartPolicy: 'Never' // The container will run once and then stop
   }
 }
-
-// Outputs
-output applicationUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
-output frontDoorEndpointHostName string = frontDoorEndpoint.properties.hostName

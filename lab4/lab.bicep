@@ -1,118 +1,136 @@
-@description('Primary location for the resources.')
-param primaryLocation string = 'swedencentral'
+@description('Location for the Container App Environment.')
+param location string = 'swedencentral'
 
-@description('Secondary location for the resources.')
-param secondaryLocation string = 'westeurope'
+@description('Application Container Image.')
+param applicationImage string = 'danielfroding/scalingcloud'
 
-@description('Container image for the web app from Azure Container Registry (ACR).')
-param containerImage string = 'DOCKER|danielfroding/scalingcloud'
+@description('Unique name for the Front Door endpoint.')
+param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 
-@description('Name of the Traffic Manager profile.')
-param trafficManagerName string = 'myUniqueTrafficManagerProfile123'
-
-// App Service Plans
-resource primaryAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
-  name: 'myPrimaryAppServicePlan'
-  location: primaryLocation
-  sku: {
-    tier: 'Standard'
-    name: 'S1'
-  }
-  properties: {
-    reserved: true // Indicates it's for Linux
-  }
+// Create a Container App Environment
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: 'appEnvironment'
+  location: location
+  properties: {}
 }
 
-resource secondaryAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
-  name: 'mySecondaryAppServicePlan'
-  location: secondaryLocation
-  sku: {
-    tier: 'Standard'
-    name: 'S1'
-  }
+// Deploy the Application Container as a Container App with public ingress
+resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'my-website'
+  location: location
   properties: {
-    reserved: true // Indicates it's for Linux
-  }
-}
-
-// Web Apps
-resource primaryWebApp 'Microsoft.Web/sites@2022-09-01' = {
-  name: 'my-website-primary'
-  location: primaryLocation
-  properties: {
-    serverFarmId: primaryAppServicePlan.id
-    siteConfig: {
-      linuxFxVersion: containerImage
-      appSettings: [
+    managedEnvironmentId: containerAppEnvironment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 80
+        transport: 'auto'
+      }
+    }
+    template: {
+      scale: {
+        minReplicas: 3
+        maxReplicas: 20
+        rules: [
+          {
+            name: 'http-requests-scaling'
+            custom: {
+              type: 'http'
+              metadata: {
+                concurrentRequests: string(20)
+              }
+            }
+          }
+        ]
+      }
+      containers: [
         {
-          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'false'
-        }
-        {
-          name: 'DOCKER_ENABLE_CI'
-          value: 'true'
+          name: 'my-website'
+          image: applicationImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
         }
       ]
     }
-    httpsOnly: true
   }
 }
 
-resource secondaryWebApp 'Microsoft.Web/sites@2022-09-01' = {
-  name: 'my-website-secondary'
-  location: secondaryLocation
-  properties: {
-    serverFarmId: secondaryAppServicePlan.id
-    siteConfig: {
-      linuxFxVersion: containerImage
-      appSettings: [
-        {
-          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'false'
-        }
-        {
-          name: 'DOCKER_ENABLE_CI'
-          value: 'true'
-        }
-      ]
-    }
-    httpsOnly: true
+// Front Door Profile
+resource frontDoorProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
+  name: 'MyFrontDoorProfile'
+  location: 'global'
+  sku: {
+    name: 'Standard_AzureFrontDoor'
   }
 }
 
-// Traffic Manager Profile
-resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {
-  name: trafficManagerName
+// Front Door Endpoint
+resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' = {
+  name: frontDoorEndpointName
+  parent: frontDoorProfile
   location: 'global'
   properties: {
-    profileStatus: 'Enabled'
-    trafficRoutingMethod: 'Performance'
-    dnsConfig: {
-      relativeName: trafficManagerName
-      ttl: 30
-    }
-    monitorConfig: {
-      protocol: 'HTTP'
-      port: 80
-      path: '/'
-    }
-    endpoints: [
-      {
-        name: 'primaryEndpoint'
-        type: 'Microsoft.Network/trafficManagerProfiles/AzureEndpoints'
-        properties: {
-          targetResourceId: primaryWebApp.id
-          endpointStatus: 'Enabled'
-        }
-      }
-      {
-        name: 'secondaryEndpoint'
-        type: 'Microsoft.Network/trafficManagerProfiles/AzureEndpoints'
-        properties: {
-          targetResourceId: secondaryWebApp.id
-          endpointStatus: 'Enabled'
-        }
-      }
-    ]
+    enabledState: 'Enabled'
   }
 }
+
+// Front Door Origin Group
+resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
+  name: 'MyOriginGroup'
+  parent: frontDoorProfile
+  properties: {
+    loadBalancingSettings: {
+      sampleSize: 4
+      successfulSamplesRequired: 3
+    }
+    healthProbeSettings: {
+      probePath: '/'
+      probeRequestType: 'HEAD'
+      probeProtocol: 'Http'
+      probeIntervalInSeconds: 120
+    }
+  }
+}
+
+// Front Door Origin
+resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
+  name: 'MyAppOrigin'
+  parent: frontDoorOriginGroup
+  properties: {
+    hostName: containerApp.properties.configuration.ingress.fqdn
+    httpPort: 8080
+    originHostHeader: containerApp.properties.configuration.ingress.fqdn
+    priority: 1
+    weight: 1000
+  }
+}
+
+// Front Door Route
+resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
+  name: 'MyRoute'
+  parent: frontDoorEndpoint
+  dependsOn: [
+    frontDoorOrigin
+  ]
+  properties: {
+    originGroup: {
+      id: frontDoorOriginGroup.id
+    }
+    supportedProtocols: [
+      'Http'
+      'Https'
+    ]
+    patternsToMatch: [
+      '/*'
+    ]
+    forwardingProtocol: 'HttpsOnly'
+    linkToDefaultDomain: 'Enabled'
+    httpsRedirect: 'Enabled'
+  }
+}
+
+// Outputs
+output applicationUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
+output frontDoorEndpointHostName string = frontDoorEndpoint.properties.hostName
