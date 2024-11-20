@@ -17,11 +17,11 @@ param minReplicas int = 3 // Increased to start with 3 containers
 param maxReplicas int = 20 // Allow scaling up to 20 containers
 
 @description('Target average number of requests per second per replica')
-param targetRequests int = 50
+param targetRequests int = 10
 
 
 // Create a Container App Environment
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
   location: location
   properties: {}
@@ -29,10 +29,10 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 
 // Deploy the Application Container as a Container App with public ingress
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'application'
+  name: 'my-website'
   location: location
   properties: {
-    managedEnvironmentId: containerAppEnv.id
+    managedEnvironmentId: containerAppEnvironment.id
     configuration: {
       ingress: {
         external: true
@@ -58,7 +58,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
       containers: [
         {
-          name: 'application'
+          name: 'my-website-container'
           image: applicationImage
           resources: {
             cpu: json('0.25')
