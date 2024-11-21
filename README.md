@@ -27,7 +27,6 @@ This course will guide you through scaling cloud applications using Docker and A
 3. **GitHub Account**
    - Sign up: [https://github.com/join](https://github.com/join)
    - Configure ssh access to GitHub by [following this instruction](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-     - Go to **Settings** > **Developer settings** > **Personal access tokens**.
 
 4. **Fork the course Repository into your GitHub Account**
    - Go to [the course reporitory](https://github.com/sodalabsab/scalingcloud.git)
