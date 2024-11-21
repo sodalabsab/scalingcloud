@@ -26,16 +26,16 @@ This course will guide you through scaling cloud applications using Docker and A
 
 3. **GitHub Account**
    - Sign up: [https://github.com/join](https://github.com/join)
-   - Configure a Personal Access Token for GitHub Actions:
+   - Configure ssh access to GitHub by [following this instruction](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
      - Go to **Settings** > **Developer settings** > **Personal access tokens**.
 
-4. **Clone the course Repository into your GitHub Account**
-   - In your GitHub home screen, click on the small + sign top right
-   - Select "Import repository" paste the [URL of the course reporitory](https://github.com/sodalabsab/scalingcloud.git)
-   - Name the repository "scalecloud" and select private, this will import the course code into your account, giving you a local copy
+4. **Fork the course Repository into your GitHub Account**
+   - Go to [the course reporitory](https://github.com/sodalabsab/scalingcloud.git)
+   - Select "Fork" to create your own disconnected version of the course code repository
+   - Name the repository "scalecloud" click on "Create fork"
 
 5. **Download the repository localy**
-   - Go to the newly created repo in your github account and click on the green "<>Code" button. Copy the SSH URL:
+   - Go to the newly created repo in your github account and click on the green "<>Code" button. Copy the SSH URL and open a comand shell on your computer. Paste in this command to create a local repository (connected to the github repository)
      ```bash
      git clone git@github.com:<your-username>/scalecloud.git
      ```
@@ -48,7 +48,7 @@ This course will guide you through scaling cloud applications using Docker and A
      ```bash
      git remove -v
      ```  
-     You sould see something like: `origin	git@github.com:danielfroding/scalcloud.git (push)`
+     You sould see something like: `origin	git@github.com:<your usernam>/scalingcloud.git (push)`
 
 6. **Docker (requires local admin)**
    - Download and install from: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
@@ -57,7 +57,7 @@ This course will guide you through scaling cloud applications using Docker and A
      docker --version
      ```
 7. **DockerHub**
-   - Login or sign up for a DockerHub account at [https://www.dockerhub.com/](https://www.dockerhub.com/)
+   - Login or sign up for a DockerHub account at [https://hub.docker.com/](https://hub.docker.com/)
 
 7. **Open the code in VS Code**
    - Start VS Code and open the directory by selecting "Open folder..." from the File meny

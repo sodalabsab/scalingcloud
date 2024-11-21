@@ -34,6 +34,10 @@ This command maps port 8080 on your host machine to port 80 in the container, wh
 docker login
 ```
 Enter your DockerHub username and password when prompted.
+3. (It you are on a Mac): Make sure the container is built for amd64
+```bash
+docker build  --platform linux/amd64 -t <username>/my-website:latest .
+```
 3. Tag the image with your DockerHub username and repository name. Replace <username> with your DockerHub username:
 ```bash
 docker tag my-website <username>/my-website:latest
