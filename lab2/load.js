@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 // Target URL (modify to point to your Nginx load-balanced endpoint)
-const url = 'http://localhost:8080';
+const url = 'http://localhost:8081';
 
 export let options = {
   vus: 100,           // Number of virtual users

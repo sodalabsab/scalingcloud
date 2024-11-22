@@ -95,7 +95,7 @@ resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' =
 }
 
 // Front Door Origin
-resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
+resource x§ 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
   name: 'MyAppOrigin'
   parent: frontDoorOriginGroup
   properties: {
