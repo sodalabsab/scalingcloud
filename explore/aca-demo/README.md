@@ -1,79 +1,118 @@
-# Azure Container Apps & CI/CD Lab
+# Azure Scaling Lab: Exercises
 
-This project serves as a practical lab for developers to learn how to deploy containerized applications to Azure Container Apps (ACA) using modern "Platform Engineering" practices and GitHub Actions.
+This lab guides you through the concepts of scaling, from local development to advanced cloud patterns.
 
-## 🎓 Lab Overview
+## 🛠️ Setup & Prerequisites
 
-In this lab, you will act as both a **Platform Engineer** and a **Product Developer**.
-
-1.  **Platform Engineering**: You will bootstrap a shared infrastructure (Azure Container Registry, Managed Environment, Log Analytics) that acts as the "deployment target".
-2.  **Product Development**: You will set up a CI/CD pipeline to deploy a web application to this infrastructure automatically on every code change.
-
-### Architecture
-
-*   **`infra/platform/`**: Contains Bicep code for long-lived infrastructure (ACR, Env).
-*   **`infra/app/`**: Contains Bicep code for the application service itself.
-*   **`src/`**: The simple HTML application.
-*   **`.github/workflows/`**: The CI/CD pipeline definition.
+Before starting the exercises, ensure you have:
+1.  **Repository Cloned**: `git clone ...`
+2.  **Tools Installed**: Docker, Azure CLI, GitHub CLI, k6.
+    *   *Install k6*: `brew install k6` or check [k6.io](https://k6.io/docs/get-started/installation/)
 
 ---
 
-## 🛠️ Lab Instructions
+## Exercise 1: Local Development & Scaling
 
-### Prerequisites
-*   **Azure CLI**: Logged in (`az login`).
-*   **GitHub CLI**: Logged in (`gh auth login`).
-*   **Git**: Installed.
+**Goal**: Understand balancing traffic across multiple containers using Docker Compose.
 
-### Step 1: Platform Setup (Infrastructure)
-Run the setup script to provision the Azure infrastructure. This mimics the work a Platform team would do for you.
-
-```bash
-./setup.sh
-```
-*Wait for this to complete.* It will output several secret values (ACR Name, Environment ID). **Keep these safe**, you will need them only if you configure secrets manually.
-
-### Step 2: Product Setup (CI/CD)
-Run the GitHub setup script. This will initialize your git repo, create it on GitHub, and importantly, **configure all necessary GitHub Actions Secrets** for you automatically.
-
-```bash
-./github_setup.sh
-```
-
-### Step 3: Verify Deployment
-1.  Go to your new repository on GitHub.
-2.  Click the **Actions** tab.
-3.  Watch the `Deploy to Azure Container Apps` workflow run.
-4.  Once green, check the "Deploy Container App" step logs to find your Application URL!
-
----
-
-## 🔄 Reset / Teardown (Start Over)
-
-To completely clear this lab and start from scratch (e.g., for a new student or a fresh run), use the teardown script.
-
-**⚠️ WARNING**: This destroys the Azure Resource Group and the GitHub Repository.
-
-```bash
-./teardown.sh
-```
-
-### Manual Teardown Steps
-If you prefer to do this manually:
-1.  **Delete Azure Resources**: `az group delete --name rg-aca-platform --yes --no-wait`
-2.  **Delete GitHub Repo**: `gh repo delete <your-username>/aca-demo --yes`
-3.  **Reset Local Git**: `rm -rf .git`
-
-> **Note**: If `gh repo delete` fails with a 403 error, you need to grant the CLI permission to delete repositories. Run:
-> `gh auth refresh -h github.com -s delete_repo`
-
----
-
-## 🏫 Instructor Notes
-
-*   **Secrets Handling**: The `github_setup.sh` script attempts to automatically set secrets. In a classroom setting, ensure students have a Service Principal created or guide them to create one using:
+1.  **Run the Stack**:
+    Start one instance of the app behind an Nginx load balancer.
     ```bash
-    az ad sp create-for-rbac --name "aca-lab-student" --role contributor --scopes /subscriptions/<sub-id>/resourceGroups/rg-aca-platform --sdk-auth
+    docker-compose up -d
     ```
-    They will need to export this as `AZURE_CREDENTIALS` before running the github setup script if the script doesn't handle creation.
-*   **Cost**: This lab uses the Basic SKU for ACR and Consumption plan for ACA, which is very cost-effective. Remember to tear down resources after the workshop to stop billing.
+    Open [http://localhost:8080](http://localhost:8080). You should see the "Hello World" app.
+
+2.  **Scale it Up**:
+    Scale the application to 3 instances. Nginx will automatically round-robin requests between them (handled by Docker's internal DNS).
+    ```bash
+    docker-compose up -d --scale app=3
+    ```
+
+3.  **Load Test**:
+    Use `k6` to send traffic to your local cluster.
+    ```bash
+    k6 run load-tests/script.js
+    ```
+    *Observe*: Docker Desktop stats or logs (`docker-compose logs -f app`) to see traffic hitting different containers.
+
+4.  **Cleanup**:
+    ```bash
+    docker-compose down
+    ```
+
+---
+
+## Exercise 2: Cloud Platform Foundation
+
+**Goal**: Provision the Azure "Landing Zone" for your applications.
+
+1.  **Run Setup Script**:
+    ```bash
+    ./setup.sh
+    ```
+    This creates the Resource Group, Container Registry (ACR), and Container App Environment.
+
+2.  **Verify**:
+    Log in to the [Azure Portal](https://portal.azure.com) and find your resource group (`rg-aca-platform`).
+
+---
+
+## Exercise 3: Deployment & Vertical Scaling
+
+**Goal**: Deploy your app and understand "Vertical Scaling" (adding more power to a single instance).
+
+1.  **Configure CI/CD**:
+    Run the GitHub setup to connect your repo and secrets.
+    ```bash
+    ./github_setup.sh
+    ```
+    *Wait for the GitHub Action to complete and verify the app is running in Azure.*
+
+2.  **Vertical Scale**:
+    Modify `infra/app/main.bicep`. Change the CPU and Memory allocation:
+    ```bicep
+    resources: {
+        cpu: json('1.0')   // Was 0.5
+        memory: '2.0Gi'    // Was 1.0Gi
+    }
+    ```
+
+3.  **Deploy Change**:
+    Commit and push the change.
+    ```bash
+    git add .
+    git commit -m "Vertical scale up"
+    git push
+    ```
+
+4.  **Verify**:
+    Check the Azure Portal > Container App > Revisions. You should see a new revision with higher resources.
+
+---
+
+## Exercise 4: Horizontal Autoscaling (KEDA)
+
+**Goal**: Configure the app to automatically add more instances (replicas) when traffic spikes.
+
+1.  **Configure Autoscaling**:
+    Open `infra/app/main.bicep`. Update the `scale` block parameters:
+    *   `minReplicas`: 1
+    *   `maxReplicas`: 10
+
+    *Note: The template is already pre-configured with a KEDA HTTP scaling rule (`concurrentRequests: '10'`).*
+
+2.  **Deploy**:
+    Commit and push your changes to enable autoscaling.
+
+3.  **Stress Test**:
+    Run `k6` against your **Azure URL**.
+    ```bash
+    # Get your App URL from the Azure Portal or setup output
+    export BASE_URL="https://aca-hello-world.....azurecontainerapps.io"
+    
+    k6 run -e BASE_URL=$BASE_URL load-tests/script.js
+    ```
+
+4.  **Observe**:
+    Go to the Azure Portal > Container App > **Metrics**.
+    View the **Replica Count**. You should see it increase as the load test runs and scale back down when it finishes.
