@@ -13,14 +13,13 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-  ACR_NAME: ${{ secrets.ACR_NAME }}
-  ENVIRONMENT_ID: ${{ secrets.ACA_ENVIRONMENT_ID }}
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      ACR_NAME: ${{ secrets.ACR_NAME }}
+      ENVIRONMENT_ID: ${{ secrets.ACA_ENVIRONMENT_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

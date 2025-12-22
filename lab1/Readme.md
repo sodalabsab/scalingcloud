@@ -27,6 +27,9 @@ This directory contains a simple Docker setup with an Nginx server, that serves 
       
 This command maps port 8080 on your host machine to port 80 in the container, where Nginx is listening and serving the content in the html directory.
 
+### Accessing the Application
+Open your browser and go to http://localhost:8080 to view the served static files.
+
 ### Push the application to dockerhub
 1. Login or sign up for a DockerHub account at dockerhub.com.
 2. Authenticate using the Docker CLI:
@@ -47,10 +50,6 @@ docker tag my-website <username>/my-website:latest
 docker push <username>/my-website:latest
 ```
 5. Go to your DockerHub account and confirm the my-website image is available under your repositories.
-
-### Accessing the Application
-
-Open your browser and go to http://localhost:8080 to view the served static files.
 
 ### File Structure
 ```bash
