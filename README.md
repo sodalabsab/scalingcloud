@@ -56,10 +56,10 @@ Install the following essential tools:
 To automate deployments, we need to connect your GitHub repository to your Azure subscription securely.
 
 ### Option 1: Azure Portal Setup (Manual)
-*(See steps A, B, and C above)*
+*(See steps A, B, and C above - or simply search for "Managed Identities" in the portal if you prefer that route)*
 
-### Option 2: Azure CLI Setup (Automated)
-Instead of clicking through the portal, you can run this script in your terminal to set up everything at once.
+### Option 2: Azure CLI Setup (Automated & Recommended)
+This method creates a **User-Assigned Managed Identity**, which is an Azure resource that simplifies identity management.
 
 **Prerequisite:** Ensure you are logged in (`az login`) and have selected the correct subscription (`az account set -s <SUBSCRIPTION_ID>`).
 
@@ -67,28 +67,39 @@ Instead of clicking through the portal, you can run this script in your terminal
 # Variables - Update these!
 GITHUB_ORG="<your-github-username>"
 GITHUB_REPO="scalecloud"
-APP_NAME="github-actions-scalecloud"
+RG_NAME="rg-scalingcloud-identity"
+IDENTITY_NAME="id-github-actions-scalecloud"
+LOCATION="swedencentral" 
 
-# 1. Create Azure AD App Registration
-APP_ID=$(az ad app create --display-name $APP_NAME --query appId -o tsv)
+# 1. Create Resource Group for Identity
+az group create --name $RG_NAME --location $LOCATION
 
-# 2. Create Service Principal for the App
-SP_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
+# 2. Create User-Assigned Managed Identity
+# This acts as the identity for GitHub Actions
+IDENTITY_ID=$(az identity create --name $IDENTITY_NAME --resource-group $RG_NAME --query id -o tsv)
+CLIENT_ID=$(az identity show --name $IDENTITY_NAME --resource-group $RG_NAME --query clientId -o tsv)
+PRINCIPAL_ID=$(az identity show --name $IDENTITY_NAME --resource-group $RG_NAME --query principalId -o tsv)
 
 # 3. Assign Contributor Role to the Subscription
+# This gives the identity permission to deploy resources in your subscription
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-az role assignment create --assignee $APP_ID --role Contributor --scope /subscriptions/$SUBSCRIPTION_ID
+az role assignment create --assignee $PRINCIPAL_ID --role Contributor --scope /subscriptions/$SUBSCRIPTION_ID
 
 # 4. Create Federated Credential for 'main' branch
-az ad app federated-credential create --id $APP_ID \
-  --parameters "{\"name\":\"github-actions-main\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main\",\"description\":\"GitHub Actions for main branch\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+# This establishes the trust between GitHub Actions and the Managed Identity
+az identity federated-credential create --name "github-actions-main" \
+  --identity-name $IDENTITY_NAME \
+  --resource-group $RG_NAME \
+  --issuer "https://token.actions.githubusercontent.com" \
+  --subject "repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main" \
+  --audiences "api://AzureADTokenExchange"
 
 # 5. Output Secrets for GitHub
 echo ""
 echo "--------------------------------------------------------"
 echo "✅ Setup Complete! Add these to your GitHub Secrets:"
 echo "--------------------------------------------------------"
-echo "AZURE_CLIENT_ID:       $APP_ID"
+echo "AZURE_CLIENT_ID:       $CLIENT_ID"
 echo "AZURE_TENANT_ID:       $(az account show --query tenantId -o tsv)"
 echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
 echo "--------------------------------------------------------"
