@@ -1,6 +1,10 @@
 # Lab 3 - Deploying a Container App to Azure with Bicep
 
-This lab demonstrates deploying a simple Container App to Azure using Bicep and automating the deployment with GitHub Actions. The Bicep file uses a declarative syntax to define Azure resources, allowing for consistent, repeatable deployments while treating your infrastructure as code.
+This lab demonstrates deploying a simple Container App to Azure using Bicep and automating the deployment with GitHub Actions. 
+
+**AKF Connection (X-Axis)**: This lab focuses on **Horizontal Duplication**. By deploying our container to Azure Container Apps, we can easily run multiple identical copies (replicas) of our application. The platform handles the load balancing between them, adhering to the X-Axis scaling principle.
+
+The Bicep file uses a declarative syntax to define Azure resources, allowing for consistent, repeatable deployments while treating your infrastructure as code.
 
 ## Contents
 
@@ -10,8 +14,46 @@ This lab demonstrates deploying a simple Container App to Azure using Bicep and 
 ### Prerequisites
 - Setup 2 from the readme at the root of to reposiroty must have been done and verified
 - [K6](https://k6.io/) must be installed for running load tests. Follow the instructions on the K6 website to install it.
+- **Completed Lab 1**: You need the source code and knowledge from Lab 1.
 
-### Execution
+### Step 1: Push the Image to Azure (ACR)
+Before we can deploy the container app in Azure, we need to make our container image available in the cloud. We will push the image we built in Lab 1 to the Azure Container Registry (ACR) we configured in Setup 2.
+
+1.  **Login to Azure**:
+    ```bash
+    az login
+    ```
+
+2.  **Login to your ACR**:
+    *Replace `<acr-name>` with the name of your registry.*
+    ```bash
+    az acr login --name <acr-name>
+    ```
+
+3.  **Build and Push the Image**:
+    Navigate to the `lab1` directory (where the Dockerfile is) and run the provided helper script. It handles building (for amd64), tagging, and pushing.
+    
+    **Linux/Mac:**
+    *Open the script `push-to-acr.sh` and update the `ACR_NAME` variable first!*
+    ```bash
+    cd lab1
+    ./push-to-acr.sh
+    cd ..
+    ```
+    
+    **Windows:**
+    *Open the script `push-to-acr.bat` and update the `ACR_NAME` variable first!*
+    ```cmd
+    cd lab1
+    push-to-acr.bat
+    cd ..
+    ```
+
+    *Alternatively, you can run the docker commands manually as described in the `push-to-acr.sh` file.*
+
+4.  **Verify**: check the Azure Portal -> Container Registry -> Repositories. You should see `my-website` with the tag `latest`.
+
+### Step 2: Deploy Infrastructure (Bicep)
 1. Go to the "action" tab in your GitHub account and select the `Lab bicep deployment` workflow to the left
 2. Click on the "Run workflow" button and specify `lab3` Lab nr (That is the default)
 3. Select "Run Workflow" and refresh the page to se the newly started workflow execution
@@ -36,7 +78,18 @@ sed -i 's/\b[Mm][Aa][Ss][Ss][Ii][Vv][Ee][Ll][Yy]\b/Smallish/gI' index.html
 ```
 
 ### Accessing the Application
-The URL to the deployed application can be fond in the logs in GitHub actions, or in azure portal. Copy the URL and paste it in to a browser to see the result.
+### Acceptance Criteria
+*   The application is accessible via the public URL provided by Azure Container Apps.
+*   The K6 load test triggers auto-scaling, increasing the replica count from 3 to a higher number (up to 20).
+*   After the load test finishes, the replica count eventually scales back down.
+
+### Shutdown Instructions
+**Important**: Delete the resource group to stop incurring costs.
+*   **Option 1 (GitHub Actions)**: Run the "Delete Azure Resource Group" workflow manually.
+*   **Option 2 (Azure CLI)**:
+    ```bash
+    az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
+    ```
 
 ## File Structure
 ```bash

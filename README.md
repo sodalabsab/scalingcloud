@@ -1,214 +1,144 @@
-# Scaling Cloud Course
+# Scaling Cloud: Cloud-Native Applications with Azure & Docker
 
-This course will guide you through scaling cloud applications using Docker and Azure services, with a focus on Bicep deployments. Below are detailed instructions for cloning the course code, setting up your local environment, configuring and integrating accounts, and deploying infrastructure and applications.
+Welcome to the **Scaling Cloud** course! This repository is your hands-on guide to building, containerizing, and scaling modern web applications using **Docker**, **Azure Container Registry (ACR)**, **Azure Container Apps**, and **Infrastructure as Code (IaC)** with Bicep.
 
----
+## Course Objectives
+By the end of this course, you will be able to:
+1.  **Develop** and containerize a web application using Docker.
+2.  **Securely push** and manage container images in a private Azure Container Registry (ACR).
+3.  **Automate** infrastructure deployment using Azure Bicep and GitHub Actions.
+4.  **Deploy and scale** applications to Azure Container Apps.
+5.  **Manage traffic** and high availability with Azure Traffic Manager.
 
-## Setup 1
+### Conceptual Model: The AKF Scaling Cube
+This course is structured around the **AKF Scaling Cube**, a model for analyzing and improving the scalability of products.
 
-### Tools and Accounts Setup for lab 1 and 2
-
-1. **Microsoft Visual Studio Code (VS Code)**
-   - Download and install from: [https://code.visualstudio.com/](https://code.visualstudio.com/)
-   - Install helpful extensions: Docker and Git.
-
-2. **Git (if that is not already on your computer)**
-   - Download and install from: [https://git-scm.com/](https://git-scm.com/)
-   - Configure Git with your name and email:
-     ```bash
-     git config --global user.name "Your Name"
-     git config --global user.email "your.email@example.com"
-     ```
-   - Verify Git installation:
-     ```bash
-     git --version
-     ```
-
-3. **GitHub Account**
-   - Sign up: [https://github.com/join](https://github.com/join)
-   - Configure ssh access to GitHub by [following this instruction](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-
-4. **Fork the course Repository into your GitHub Account**
-   - Go to [the course reporitory](https://github.com/sodalabsab/scalingcloud.git)
-   - Select "Fork" to create your own disconnected version of the course code repository
-   - Name the repository "scalecloud" click on "Create fork"
-
-5. **Download the repository localy**
-   - Go to the newly created repo in your github account and click on the green "<>Code" button. Copy the SSH URL and open a comand shell on your computer. Paste in this command to create a local repository (connected to the github repository)
-     ```bash
-     git clone git@github.com:<your-username>/scalecloud.git
-     ```
-   - Replace `<your-username>` with your GitHub username.
-   - Change directory into the repo:
-     ```bash
-     cd scalecloud
-     ```
-   - Verify the repo with the command
-     ```bash
-     git remove -v
-     ```  
-     You sould see something like: `origin	git@github.com:<your usernam>/scalingcloud.git (push)`
-
-6. **Docker (requires local admin)**
-   - Download and install from: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
-   - Ensure Docker is running and verify installation:
-     ```bash
-     docker --version
-     ```
-7. **DockerHub**
-   - Login or sign up for a DockerHub account at [https://hub.docker.com/](https://hub.docker.com/)
-
-7. **Open the code in VS Code**
-   - Start VS Code and open the directory by selecting "Open folder..." from the File meny
-
-# Setup 2 - move to the cloud
-
-This part explores some of the avaliable tools to build, deploy and monitor applications in Azure. There are a few things required to be setup to be able to run the labs. 
-
-1. **Azure Account**
-   - Sign up: [https://azure.microsoft.com/free/](https://azure.microsoft.com/free/)
-   - Ensure your subscription is active (you should be able to create a free tier subscriptioin)
-
-2. **(Optional) Azure CLI**
-   - Install from: [https://docs.microsoft.com/en-us/cli/azure/install-azure-cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-   - Log in to your Azure account:
-     ```bash
-     az login
-     ```
-
-7. **(Optional) Bicep CLI**
-   - Install Bicep using Azure CLI:
-     ```bash
-     az bicep install
-     ```
-   - Verify Bicep installation:
-     ```bash
-     az bicep version
-     ```
-
-## GitHub actions Setup for Azure Bicep Deployment
-
-### Configure GitHub Secrets
-
-You need to configure the following GitHub Secrets in your repository for secure deployment. These secrets are referenced in the actions workflows and in bicep files.
-
-#### Steps to Configure Secrets
-
-1. Go to your repository's **Settings**.
-2. Navigate to **Secrets and variables** > **Actions**.
-3. Add the following secrets:
-   - `AZURE_SUBSCRIPTION_ID`: Your Azure subscription ID.
-   - `AZURE_RESOURCE_GROUP`: Provide a suitable name of the resource groups that will be created and used for the labs.
-   - `DOCKERHUB_PASSWORD`: Your password to dockerhub.com (used for rebuilding and pushing a new version of `my-website`) 
-   - `DOCKERHUB_IMAGE`: The name of your image that ws pushed to dockerhub.com in lab1. It will be used as input into the bicep file that sets up the labs in azure.  
-
-### Setting Up Azure Credentials in GitHub
-
-To deploy Azure resources using GitHub Actions, you need to create and configure Azure credentials securely in your GitHub repository. We need to create a service principal (server account) in Azure and give to GitHub to allow access from GitHub Actions into Azure. Here's how to do it:
-
-1. **Create a Service Principal**
-   - Run the following command to create a new service principal and capture the output, which includes your `appId`, `password`, and `tenant`:
-     ```bash
-     az account show --query id --output tsv 
-     az ad sp create-for-rbac --name "github-actions-deploy" --role contributor --scopes /subscriptions/<AZURE_SUBSCRIPTION_ID> --sdk-auth
-     ```
-   - Replace `<AZURE_SUBSCRIPTION_ID>` with your actual Azure subscription ID from the first command. (You can also find the subscription ID in the portal)
-   - The output will look like this:
-     ```json
-     {
-       "appId": "YOUR_APP_ID",
-       "displayName": "github-actions-deploy",
-       "password": "YOUR_PASSWORD",
-       "tenant": "YOUR_TENANT_ID"
-     }
-     ```
-
-3. **Store Azure Credentials in GitHub Secrets**
-   - Go to your GitHub repository and navigate to **Settings**.
-   - Under **Secrets and variables**, click on **Actions**.
-   - Click **New repository secret** and add a secret named `AZURE_CREDENTIALS`.
-   - Past in the JSON ouput from step 2 so that `AZURE_CREDENTIALS` secret is a JSON string containing your credentials.
+*   **X-Axis (Horizontal Duplication)**: Cloning the application and data behind a load balancer. We cover this in **Lab 3** by running multiple replicas of our container.
+*   **Y-Axis (Functional Decomposition)**: Splitting the application into smaller services/microservices. While our demo app is simple, containerization (Lab 1) is the first step towards this architecture.
+*   **Z-Axis (Data Partitioning)**: Splitting data and customers, often by geography. **Lab 4 and 5** explore this by using **Azure Front Door** to route traffic globally, laying the foundation for geo-partitioning.
 
 ---
 
-## Running the Azure labs
+## Setup 1: Local Environment & Tools
 
-The GitHub Actions workflow `.github/workflows/lab-bicep-deploy.yml` is designed to deploy Azure resources using Bicep files located in specific directories for Labs 3, 4, and 5. It allows you to specify which lab's Bicep file to deploy using manual workflow dispatch.
-This allows you to trigger the workflow and provide an input specifying the lab number (`labPath`), which points to the directory where the Bicep file is located. By default, it deploys the Bicep file for `lab3`.
+Before touching the cloud, we need to set up your local development environment.
 
-### Environment Variables
+### 1. Development Tools
+Install the following essential tools:
+*   [**VS Code**](https://code.visualstudio.com/): Our code editor. Install the *Docker* and *Bicep* extensions.
+*   [**Git**](https://git-scm.com/): For version control.
+    ```bash
+    git config --global user.name "Your Name"
+    git config --global user.email "your.email@example.com"
+    ```
+*   [**Docker Desktop**](https://www.docker.com/products/docker-desktop): To build and run containers locally.
+*   [**Azure CLI**](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli): To interact with Azure from your terminal.
+    *   Verify installation: `az --version`
+    *   Login: `az login`
+*   [**Bicep CLI**](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install): To compile infrastructure templates.
+    ```bash
+    az bicep install
+    ```
 
-- `AZURE_SUBSCRIPTION_ID`: Retrieved from GitHub Secrets and used to identify your Azure subscription.
-- `AZURE_CREDENTIALS`
-- `RESOURCE_GROUP`: The name of the Azure resource group, dynamically constructed using the lab path input. It appends the lab number to the base resource group name.
-- `LOCATION`: Set to `swedencentral`, which is the default location for all resources.
-
-
-### Jobs and Steps
-
-The workflow contains a single job, `deploy`, that runs on an `ubuntu-latest` virtual environment and executes the following steps:
-
-1. **Checkout Repository**
-   - **Action**: `actions/checkout@v2`  
-     This step checks out the code from the repository, making the Bicep files available for deployment.
-
-2. **Log in to Azure**
-   - **Action**: `azure/login@v1`  
-     This step logs into your Azure account using the credentials stored in GitHub Secrets (`AZURE_CREDENTIALS`). This is necessary to authenticate and interact with Azure resources.
-
-3. **Ensure the Resource Group Exists**
-   - **Command**: 
-     ```bash
-     az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --tags Project=scalingCloudLab
-     ```
-   - **Description**: This command creates the resource group if it does not already exist. It uses the `RESOURCE_GROUP` environment variable, which incorporates the lab path, and assigns a tag `Project=scalingCloudLab` to the resource group.
-
-4. **Deploy Bicep File for the Specified Lab**
-   - **Command**:
-     ```bash
-     az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --template-file ${{ github.event.inputs.labPath }}/lab.bicep --mode Incremental
-     ```
-   - **Description**: This command deploys the Bicep file for the specified lab. It uses the `az deployment group create` command to deploy the infrastructure defined in the `lab.bicep` file located in the directory specified by the `labPath` input. The `--mode Incremental` flag ensures that existing resources are not deleted and only new or updated resources are deployed.
+### 2. GitHub Setup
+1.  **Fork this Repository**: Click the "Fork" button at the top right of this page to create your own copy. Name it `scalecloud`.
+2.  **Clone Locally**:
+    ```bash
+    # Replace <your-username> with your actual GitHub username
+    git clone git@github.com:<your-username>/scalecloud.git
+    cd scalecloud
+    ```
 
 ---
 
-### How to Use
+## Setup 2: Cloud Configuration (Azure & GitHub)
 
-1. **Trigger the Workflow Manually**:
-   - Navigate to the **Actions** tab in your GitHub repository.
-   - Select the **Lab Bicep Deployment** workflow.
-   - Click on **Run workflow** and specify the `labPath` input (e.g., `lab3`, `lab4`, or `lab5`) to choose which lab's Bicep file to deploy.
+To automate deployments, we need to connect your GitHub repository to your Azure subscription securely.
 
-2. **Bicep Deployment**:
-   - The workflow will create or update the Azure resource group and then deploy the infrastructure using the appropriate Bicep file.
+### 1. Azure Setup
+Ensure you have an active [Azure Subscription](https://azure.microsoft.com/free/). You will need the **Subscription ID** for the next steps (found in the Azure Portal overview page of your subscription).
 
----
+#### Create a Service Principal
+We need a "robot account" (Service Principal) for GitHub Actions to log in to Azure and deploy resources on your behalf.
 
-### Notes
-
-- **Resource Group Naming**: The resource group name is constructed dynamically, combining a base name with the lab number. This helps in organizing resources by lab.
-- **Incremental Deployment**: The `--mode Incremental` flag ensures that only changes are applied, preventing the deletion of existing resources.
-
-This workflow provides a structured and automated way to manage Azure deployments for multiple labs, making it easy to set up and scale cloud infrastructure.
-## Deploying the Test WebApp
-
-You can deploy the test web application by:
-
-1. **Pushing a Change**: Any change in the repository (e.g., code or configuration updates) will automatically trigger the deployment workflow.
-2. **Manually Triggering**: Use the **`webapp-workflow`** in GitHub Actions to manually deploy the web app.
-
-This will build and deploy the web application to your Azure environment.
-
----
-
-## Tearing Down the Environment
-
-To remove all resources and delete the resource groups created in the labs. They all have the tag: `Project=scalingCloudLab`
-
-There are two ways to delete all of them. 
-1. Go to the "action" tab in your GitHub account and select the `Lab bicep deployment` workflow to the left, click on "Run workflow", this will start a workflow that thoes the same thing as described below:
-2. If you have Azure CLI and is loggedin to your subscription run this command in a terminal:
-
+Run this command in your terminal (replace `<SUBSCRIPTION_ID>` with your actual ID):
 ```bash
-az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
+az ad sp create-for-rbac \
+  --name "github-actions-deploy-sp" \
+  --role contributor \
+  --scopes /subscriptions/<SUBSCRIPTION_ID> \
+  --sdk-auth
+```
+
+**Save the JSON output!** It contains sensitive credentials that look like this:
+```json
+{
+  "clientId": "...",
+  "clientSecret": "...",
+  "subscriptionId": "...",
+  "tenantId": "...",
+  ...
+}
+```
+
+### 2. GitHub Secrets & Variables
+Go to your forked repository on GitHub: **Settings** -> **Secrets and variables**.
+
+#### A. Repository Secrets (Encrypted)
+Under the **Actions** tab of *Secrets*, add the following:
+
+| Secret Name | Value Description |
+| :--- | :--- |
+| **`AZURE_CREDENTIALS`** | The **entire JSON output** from the service principal creation step above. |
+| **`AZURE_SUBSCRIPTION_ID`** | Your Azure Subscription ID (e.g., `abc-123-def-456`). |
+| **`AZURE_RESOURCE_GROUP`** | A base name for your resource groups (e.g., `rg-scalingcloud`). |
+
+#### B. Repository Variables (Visible)
+Under the **Actions** tab of *Variables*, add:
+
+| Variable Name | Value Description |
+| :--- | :--- |
+| **`ACR_NAME`** | The name of your Azure Container Registry (e.g., `myacr123`). *Create one in the portal if you haven't yet.* |
+| **`ACR_IMAGE`** | The full path to your image in ACR (e.g., `myacr123.azurecr.io/scalingcloud:latest`). |
+
+---
+
+## Lab Workflow & Automation
+
+This repository uses **GitHub Actions** to automate "Lab" setups. Instead of manually clicking in the portal, you will run workflows that deploy infrastructure code (Bicep) for you.
+
+### How to Run a Lab (Deploy Infrastructure)
+The workflow `Lab Bicep Deployment` handles the infrastructure creation for Labs 3, 4, and 5.
+
+1.  Navigate to the **Actions** tab in your GitHub repository.
+2.  Select **Lab Bicep Deployment** from the left sidebar.
+3.  Click **Run workflow**.
+4.  **Enter the Lab Number**: In the input field (e.g., `lab3`, `lab4`), type the folder name of the lab you want to deploy.
+5.  Click the green **Run workflow** button.
+
+*Effect: This triggers a job that logs into Azure, creates a resource group (e.g., `rg-scalingcloud-lab3`), and deploys the resources defined in that lab's `lab.bicep` file.*
+
+### How to Deploy the Web App
+When you make changes to the application code in `lab1/`:
+1.  **Push your changes** to the `main` branch.
+2.  The **`Build and push application`** workflow will automatically start.
+3.  It builds your Docker image, logs into ACR, and pushes the new version.
+4.  Your compliant Azure Container Apps will pull the new image and update automatically.
+
+---
+
+## Clean Up (Save Money!)
+
+Cloud resources cost money. Always tear down your labs when you are done.
+
+### Method 1: Automated Workflow
+1.  Go to **Actions** -> **Delete Azure Resource Group**.
+2.  Run the workflow.
+3.  This script finds all resource groups tagged with `Project=scalingCloudLab` and deletes them.
+
+### Method 2: Azure CLI
+Run this command in your terminal to delete all lab groups instantly:
+```bash
+az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | \
+  xargs -I {} az group delete --name {} --yes --no-wait
 ```

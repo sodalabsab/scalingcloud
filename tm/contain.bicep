@@ -5,7 +5,7 @@ param primaryLocation string = resourceGroup().location
 param secondaryLocation string = 'westeurope'
 
 @description('Container image for the web app from Docker Hub.')
-param containerImage string = 'danielfroding/scalingcloud'
+param containerImage string = '<acr-name>.azurecr.io/scalingcloud:latest'
 
 @description('Name of the Traffic Manager profile.')
 param trafficManagerName string = 'myUniqueTrafficManagerProfile323'

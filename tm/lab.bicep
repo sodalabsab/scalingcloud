@@ -5,7 +5,7 @@ param primaryLocation string = 'swedencentral'
 param secondaryLocation string = 'westeurope'
 
 @description('Container image for the web app from Azure Container Registry (ACR).')
-param containerImage string = 'DOCKER|danielfroding/scalingcloud'
+param containerImage string = 'DOCKER|<acr-name>.azurecr.io/scalingcloud:latest'
 
 @description('Name of the Traffic Manager profile.')
 param trafficManagerName string = 'myUniqueTrafficManagerProfile123'

@@ -27,7 +27,17 @@ The setup is a bit quirqy when it comes to javascript code for the loadtest to s
 
 
 ### Accessing the Application
-The URL to the deployed application can be fond in the logs in GitHub actions, or in azure portal. Copy the URL and paste it in to a browser to see the result.
+### Acceptance Criteria
+*   The K6 container deploys successfully to Azure.
+*   You can view the logs (`az container attach`) and see the latency results for both Direct Access and Front Door Access.
+
+### Shutdown Instructions
+**Important**: Delete the resource group to stop incurring costs.
+*   **Option 1 (GitHub Actions)**: Run the "Delete Azure Resource Group" workflow manually.
+*   **Option 2 (Azure CLI)**:
+    ```bash
+    az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
+    ```
 
 ## File Structure
 ```bash
