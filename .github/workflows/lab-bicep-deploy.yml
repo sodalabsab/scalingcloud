@@ -39,5 +39,5 @@ jobs:
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
           --template-file ${{ github.event.inputs.labPath }}/lab.bicep \
-          --parameters applicationImage=${{ vars.DOCKERHUB_IMAGE }} \
+          --parameters applicationImage=${{ vars.ACR_IMAGE }} \
           --mode Incremental

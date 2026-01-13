@@ -2,7 +2,7 @@
 param location string = 'swedencentral'
 
 @description('Application Container Image.')
-param applicationImage string = 'danielfroding/scalingcloud'
+param applicationImage string = '<acr-name>.azurecr.io/scalingcloud:latest'
 
 @description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'

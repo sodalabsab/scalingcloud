@@ -2,6 +2,8 @@
 
 This lab demonstrates how to set up an Nginx reverse proxy in a Docker container to serve static content from another container using Docker Compose. The setup uses an Nginx configuration file to forward requests to a backend web server and includes instructions for load testing to observe the behavior of load balancing.
 
+**AKF Connection (X-Axis)**: This lab provides a local demonstration of **Horizontal Duplication**. By using Docker Compose to run multiple instances (replicas) of our web server and placing a Load Balancer (Nginx) in front of them, we are implementing X-Axis scaling. This allows us to handle more simulated load by verifying that requests are distributed across the available instances.
+
 ## Contents
 
 - **docker-compose.yml**: Defines the services and configuration for the Nginx and backend containers.
@@ -10,6 +12,7 @@ This lab demonstrates how to set up an Nginx reverse proxy in a Docker container
 
 ### Prerequisites
 - [K6](https://k6.io/) must be installed for running load tests. Follow the instructions on the K6 website to install it.
+- **Stop Lab 1**: Ensure you have stopped the container from Lab 1 (`docker stop <container-id>` or `docker rm -f <container-id>`) to free up port **8080**.
 
 ### Execution
 
@@ -45,6 +48,17 @@ When starting your Docker Compose setup, use the --scale flag to specify the des
    docker compose scale my-website=10
    ```
 Docker will start 7 additional containers on the fly. Test it and run the load test again to se if the performance changes.
+
+### Acceptance Criteria
+*   The website is accessible at `http://localhost:8080`.
+*   Load tests run via K6 exit successfully (exit code 0 / no major errors).
+*   Requests are load balanced across the replicas.
+
+### Shutdown Instructions
+To stop and remove all containers and networks created by Docker Compose:
+```bash
+docker compose down
+```
 
 
 ### File Structure
