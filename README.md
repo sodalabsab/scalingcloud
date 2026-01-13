@@ -55,38 +55,44 @@ Install the following essential tools:
 
 To automate deployments, we need to connect your GitHub repository to your Azure subscription securely.
 
-### 1. Azure Setup (OIDC)
-We will use **OpenID Connect (OIDC)** to securely connect GitHub Actions to Azure without storing long-lived secrets like passwords.
+### Option 1: Azure Portal Setup (Manual)
+*(See steps A, B, and C above)*
 
-#### Step A: Create an App Registration
-1.  Go to the [Azure Portal](https://portal.azure.com) and search for **"Microsoft Entra ID"** (formerly Azure AD).
-2.  Select **"App registrations"** -> **"New registration"**.
-3.  Name it `github-actions-scalecloud` and click **Register**.
-4.  **Important:** On the Overview page, copy and save the following IDs:
-    *   **Application (client) ID** -> We will call this `AZURE_CLIENT_ID`.
-    *   **Directory (tenant) ID** -> We will call this `AZURE_TENANT_ID`.
+### Option 2: Azure CLI Setup (Automated)
+Instead of clicking through the portal, you can run this script in your terminal to set up everything at once.
 
-#### Step B: Add Federated Credentials
-1.  In your new App Registration menu, select **"Certificates & secrets"**.
-2.  Go to the **"Federated credentials"** tab and click **"Add credential"**.
-3.  Select **"GitHub Actions deploying Azure resources"**.
-4.  Fill in the details:
-    *   **Organization**: Your GitHub username (e.g., `danielfroding`).
-    *   **Repository**: `scalecloud`.
-    *   **Entity type**: **Branch**.
-    *   **GitHub branch name**: `main`.
-5.  Click **Add**.
+**Prerequisite:** Ensure you are logged in (`az login`) and have selected the correct subscription (`az account set -s <SUBSCRIPTION_ID>`).
 
-*Repeat this step if you want to deploy from other branches (like `acr`), just change the branch name.*
+```bash
+# Variables - Update these!
+GITHUB_ORG="<your-github-username>"
+GITHUB_REPO="scalecloud"
+APP_NAME="github-actions-scalecloud"
 
-#### Step C: Assign Permissions
-1.  Go to your **Azure Subscription** (search for "Subscriptions" in the top bar).
-2.  Select your subscription.
-3.  Go to **"Access control (IAM)"** -> **"Add"** -> **"Add role assignment"**.
-4.  **Role**: Select **"Contributor"**. Click Next.
-5.  **Members**: Select **"User, group, or service principal"**.
-6.  Click **"+ Select members"** and search for the App name you created (`github-actions-scalecloud`). Select it and click Select.
-7.  Click **"Review + assign"**.
+# 1. Create Azure AD App Registration
+APP_ID=$(az ad app create --display-name $APP_NAME --query appId -o tsv)
+
+# 2. Create Service Principal for the App
+SP_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
+
+# 3. Assign Contributor Role to the Subscription
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+az role assignment create --assignee $APP_ID --role Contributor --scope /subscriptions/$SUBSCRIPTION_ID
+
+# 4. Create Federated Credential for 'main' branch
+az ad app federated-credential create --id $APP_ID \
+  --parameters "{\"name\":\"github-actions-main\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main\",\"description\":\"GitHub Actions for main branch\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+
+# 5. Output Secrets for GitHub
+echo ""
+echo "--------------------------------------------------------"
+echo "✅ Setup Complete! Add these to your GitHub Secrets:"
+echo "--------------------------------------------------------"
+echo "AZURE_CLIENT_ID:       $APP_ID"
+echo "AZURE_TENANT_ID:       $(az account show --query tenantId -o tsv)"
+echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
+echo "--------------------------------------------------------"
+```
 
 ### 2. GitHub Secrets & Variables
 Go to your forked repository on GitHub: **Settings** -> **Secrets and variables**.
