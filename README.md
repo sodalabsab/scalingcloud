@@ -94,15 +94,25 @@ az identity federated-credential create --name "github-actions-main" \
   --subject "repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main" \
   --audiences "api://AzureADTokenExchange"
 
-# 5. Output Secrets for GitHub
+# 5. Set GitHub Secrets Automatically (Requires GitHub CLI 'gh')
+TENANT_ID=$(az account show --query tenantId -o tsv)
+
 echo ""
-echo "--------------------------------------------------------"
-echo "✅ Setup Complete! Add these to your GitHub Secrets:"
-echo "--------------------------------------------------------"
-echo "AZURE_CLIENT_ID:       $CLIENT_ID"
-echo "AZURE_TENANT_ID:       $(az account show --query tenantId -o tsv)"
-echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
-echo "--------------------------------------------------------"
+echo "Attempting to set GitHub Secrets via CLI..."
+
+if command -v gh &> /dev/null; then
+    gh secret set AZURE_CLIENT_ID --body "$CLIENT_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
+    gh secret set AZURE_TENANT_ID --body "$TENANT_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
+    gh secret set AZURE_SUBSCRIPTION_ID --body "$SUBSCRIPTION_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
+    echo "✅ Secrets configured successfully!"
+else
+    echo "⚠️  GitHub CLI (gh) not found. Please set these secrets manually:"
+    echo "--------------------------------------------------------"
+    echo "AZURE_CLIENT_ID:       $CLIENT_ID"
+    echo "AZURE_TENANT_ID:       $TENANT_ID"
+    echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
+    echo "--------------------------------------------------------"
+fi
 ```
 
 ### 2. GitHub Secrets & Variables
