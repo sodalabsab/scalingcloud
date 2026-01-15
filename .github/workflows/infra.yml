@@ -1,0 +1,48 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    paths:
+      - 'infra/main.bicep'  # Only run when infra code changes
+      - '.github/workflows/infra.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RG_NAME: ${{ vars.RG_NAME }}
+  LOCATION: ${{ vars.LOCATION }}
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Log in using the HIGH PRIVILEGE Infra Identity
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_INFRA }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Deploy main.bicep (Creates ACR, Identities, Assignments)
+      - name: Deploy Bicep
+        uses: azure/arm-deploy@v1
+        with:
+          scope: resourcegroup
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RG_NAME }}
+          template: ./infra/main.bicep
+          parameters: >
+            githubUser=${{ github.repository_owner }}
+            githubRepo=${{ github.event.repository.name }}
+            acrName=${{ vars.ACR_NAME }}
+            acrSku=${{ vars.ACR_SKU }}
+            environmentName=${{ vars.ENV_NAME }}
+            identityNamePull=${{ vars.APP_PULL_ID }}
+            identityNamePush=${{ vars.APP_PUSH_ID }}
