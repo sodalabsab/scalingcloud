@@ -55,6 +55,18 @@ Install the following essential tools:
 
 To automate deployments, we need to connect your GitHub repository to your Azure subscription securely.
 
+### 1. Azure Setup (OIDC)
+We will use **OpenID Connect (OIDC)** to securely connect GitHub Actions to Azure without storing long-lived secrets like passwords.
+
+#### Step A: Create an App Registration
+1.  Go to the [Azure Portal](https://portal.azure.com) and search for **"Microsoft Entra ID"** (formerly Azure AD).
+2.  Select **"App registrations"** -> **"New registration"**.
+3.  Name it `github-actions-scalecloud` and click **Register**.
+4.  **Important:** On the Overview page, copy and save the following IDs:
+    *   **Application (client) ID** -> We will call this `AZURE_CLIENT_ID`.
+    *   **Directory (tenant) ID** -> We will call this `AZURE_TENANT_ID`.
+
+
 ### Option 1: Azure Portal Setup (Manual)
 *(See steps A, B, and C above - or simply search for "Managed Identities" in the portal if you prefer that route)*
 

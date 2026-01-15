@@ -9,8 +9,8 @@ on:
         default: 'lab3'
 
 env:
-  RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}${{ github.event.inputs.labPath }}
-  LOCATION: swedencentral  # Default location for resources
+  RESOURCE_GROUP: ${{ vars.RG_NAME }}${{ github.event.inputs.labPath }}
+  LOCATION: ${{ vars.LOCATION }} # Default location for resources
 
 jobs:
   deploy:
