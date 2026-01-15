@@ -1,23 +1,46 @@
-@description('Location for all resources.')
+// --- Parameters passed from main.bicep ---
+@description('The location for the resources (defaults to RG location)')
 param location string = resourceGroup().location
 
-@description('Application Container Image')
-param applicationImage string = '<acr-name>.azurecr.io/scalingcloud:latest'
+@description('The full image name (server + repository + tag)')
+param applicationImage string
 
-// Create a Container App Environment
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'appEnvironment'
-  location: location
-  properties: {}
+@description('The ACR Login Server (e.g. sodalabs001.azurecr.io)')
+param acrServer string
+
+@description('The Resource ID of the User Assigned Identity used to pull images')
+param userAssignedIdentityId string
+
+@description('The Name of the Container App Environment (must match main.bicep)')
+param environmentName string = 'appEnvironment'
+
+// --- Existing App Environment ---
+// We reference the environment created in main.bicep
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+  name: environmentName
 }
 
-// Deploy the Application Container as a Container App with public ingress
+// --- The Container App ---
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: 'my-website'
   location: location
+  // Attach the "Badge" (Identity) to the App
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityId}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
+      // Tell the App to use the specific Identity for this Registry
+      registries: [
+        {
+          server: acrServer
+          identity: userAssignedIdentityId
+        }
+      ]
       ingress: {
         external: true
         targetPort: 80
@@ -26,15 +49,15 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
     template: {
       scale: {
-        minReplicas: 3
-        maxReplicas: 20
+        minReplicas: 1  // Good for labs to save resources
+        maxReplicas: 10
         rules: [
           {
             name: 'http-requests-scaling'
             custom: {
               type: 'http'
               metadata: {
-                concurrentRequests: string(20)
+                concurrentRequests: '20'
               }
             }
           }
@@ -53,5 +76,3 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
 }
-
-output applicationUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'

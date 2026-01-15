@@ -6,13 +6,18 @@ on:
 jobs:
   delete-resource-group:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
     # Step 1: Log in to Azure using the stored credentials
     - name: Log in to Azure
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}  # The Azure service principal JSON
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     # Step 2: Delete the Resource Group using Azure CLI
     - name: Delete Resource Group

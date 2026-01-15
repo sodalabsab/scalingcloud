@@ -55,30 +55,64 @@ Install the following essential tools:
 
 To automate deployments, we need to connect your GitHub repository to your Azure subscription securely.
 
-### 1. Azure Setup
-Ensure you have an active [Azure Subscription](https://azure.microsoft.com/free/). You will need the **Subscription ID** for the next steps (found in the Azure Portal overview page of your subscription).
+### Option 1: Azure Portal Setup (Manual)
+*(See steps A, B, and C above - or simply search for "Managed Identities" in the portal if you prefer that route)*
 
-#### Create a Service Principal
-We need a "robot account" (Service Principal) for GitHub Actions to log in to Azure and deploy resources on your behalf.
+### Option 2: Azure CLI Setup (Automated & Recommended)
+This method creates a **User-Assigned Managed Identity**, which is an Azure resource that simplifies identity management.
 
-Run this command in your terminal (replace `<SUBSCRIPTION_ID>` with your actual ID):
+**Prerequisite:** Ensure you are logged in (`az login`) and have selected the correct subscription (`az account set -s <SUBSCRIPTION_ID>`).
+
 ```bash
-az ad sp create-for-rbac \
-  --name "github-actions-deploy-sp" \
-  --role contributor \
-  --scopes /subscriptions/<SUBSCRIPTION_ID> \
-  --sdk-auth
-```
+# Variables - Update these!
+GITHUB_ORG="<your-github-username>"
+GITHUB_REPO="scalecloud"
+RG_NAME="rg-scalingcloud-identity"
+IDENTITY_NAME="id-github-actions-scalecloud"
+LOCATION="swedencentral" 
 
-**Save the JSON output!** It contains sensitive credentials that look like this:
-```json
-{
-  "clientId": "...",
-  "clientSecret": "...",
-  "subscriptionId": "...",
-  "tenantId": "...",
-  ...
-}
+# 1. Create Resource Group for Identity
+az group create --name $RG_NAME --location $LOCATION
+
+# 2. Create User-Assigned Managed Identity
+# This acts as the identity for GitHub Actions
+IDENTITY_ID=$(az identity create --name $IDENTITY_NAME --resource-group $RG_NAME --query id -o tsv)
+CLIENT_ID=$(az identity show --name $IDENTITY_NAME --resource-group $RG_NAME --query clientId -o tsv)
+PRINCIPAL_ID=$(az identity show --name $IDENTITY_NAME --resource-group $RG_NAME --query principalId -o tsv)
+
+# 3. Assign Contributor Role to the Subscription
+# This gives the identity permission to deploy resources in your subscription
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+az role assignment create --assignee $PRINCIPAL_ID --role Contributor --scope /subscriptions/$SUBSCRIPTION_ID
+
+# 4. Create Federated Credential for 'main' branch
+# This establishes the trust between GitHub Actions and the Managed Identity
+az identity federated-credential create --name "github-actions-main" \
+  --identity-name $IDENTITY_NAME \
+  --resource-group $RG_NAME \
+  --issuer "https://token.actions.githubusercontent.com" \
+  --subject "repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main" \
+  --audiences "api://AzureADTokenExchange"
+
+# 5. Set GitHub Secrets Automatically (Requires GitHub CLI 'gh')
+TENANT_ID=$(az account show --query tenantId -o tsv)
+
+echo ""
+echo "Attempting to set GitHub Secrets via CLI..."
+
+if command -v gh &> /dev/null; then
+    gh secret set AZURE_CLIENT_ID --body "$CLIENT_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
+    gh secret set AZURE_TENANT_ID --body "$TENANT_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
+    gh secret set AZURE_SUBSCRIPTION_ID --body "$SUBSCRIPTION_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
+    echo "✅ Secrets configured successfully!"
+else
+    echo "⚠️  GitHub CLI (gh) not found. Please set these secrets manually:"
+    echo "--------------------------------------------------------"
+    echo "AZURE_CLIENT_ID:       $CLIENT_ID"
+    echo "AZURE_TENANT_ID:       $TENANT_ID"
+    echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
+    echo "--------------------------------------------------------"
+fi
 ```
 
 ### 2. GitHub Secrets & Variables
@@ -89,9 +123,9 @@ Under the **Actions** tab of *Secrets*, add the following:
 
 | Secret Name | Value Description |
 | :--- | :--- |
-| **`AZURE_CREDENTIALS`** | The **entire JSON output** from the service principal creation step above. |
+| **`AZURE_CLIENT_ID`** | The Application (client) ID from Step A. |
+| **`AZURE_TENANT_ID`** | The Directory (tenant) ID from Step A. |
 | **`AZURE_SUBSCRIPTION_ID`** | Your Azure Subscription ID (e.g., `abc-123-def-456`). |
-| **`AZURE_RESOURCE_GROUP`** | A base name for your resource groups (e.g., `rg-scalingcloud`). |
 
 #### B. Repository Variables (Visible)
 Under the **Actions** tab of *Variables*, add:
@@ -100,6 +134,7 @@ Under the **Actions** tab of *Variables*, add:
 | :--- | :--- |
 | **`ACR_NAME`** | The name of your Azure Container Registry (e.g., `myacr123`). *Create one in the portal if you haven't yet.* |
 | **`ACR_IMAGE`** | The full path to your image in ACR (e.g., `myacr123.azurecr.io/scalingcloud:latest`). |
+| **`AZURE_RESOURCE_GROUP`** | A base name for your resource groups (e.g., `rg-scalingcloud`). |
 
 ---
 
