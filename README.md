@@ -87,9 +87,14 @@ We use a bootstrap script to set up the connection between GitHub and Azure. Thi
     *   Edit this file named `config.env` using your preferred text editor.
     *   Define your variables (Resource Group name, Location, etc.) in this file.
 3.  **Run the Bootstrap Script**:
-    ```bash
-    ./bootstrap.sh
-    ```
+    *   **Mac/Linux**:
+        ```bash
+        ./bootstrap.sh
+        ```
+    *   **Windows**:
+        ```powershell
+        ./bootstrap.ps1
+        ```
 
 This script will output the created resources and verify that your GitHub Secrets have been set correctly.
 
@@ -163,7 +168,18 @@ Cloud resources cost money. Always tear down your labs when you are done.
 3.  This script finds all resource groups tagged with `Project=scalingCloudLab` and deletes them.
 
 ### Method 2: Azure CLI
-Run this command in your terminal to delete all lab groups instantly:
+Run the `nuke` script in your terminal to delete all lab groups instantly:
+
+*   **Mac/Linux**:
+    ```bash
+    ./infra/nuke.sh
+    ```
+*   **Windows**:
+    ```powershell
+    ./infra/nuke.ps1
+    ```
+
+(Or run manually via CLI commands below)
 ```bash
 az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | \
   xargs -I {} az group delete --name {} --yes --no-wait
@@ -177,10 +193,10 @@ Here is a quick overview of the most important files in this repository:
 
 ### 📂 Infrastructure (`infra/`)
 This folder contains the core setup for the course environment.
-*   **`bootstrap.sh`**: The "one-click" setup script. It configures Azure Resources, Identities, and GitHub Secrets automatically.
+*   **`bootstrap.sh` / `bootstrap.ps1`**: The "one-click" setup script (Bash/PowerShell). It configures Azure Resources, Identities, and GitHub Secrets automatically.
 *   **`config.env`**: The configuration file where you define your custom names (Registry name, Location, Resource Groups).
 *   **`main.bicep`**: The core Infrastructure-as-Code template. It deploys persistent shared resources like the Azure Container Registry (ACR) and Managed Identities.
-*   **`nuke.sh`**: A "clean slate" utility. **WARNING**: This script deletes all Resource Groups created by this course to stop costs.
+*   **`nuke.sh` / `nuke.ps1`**: A "clean slate" utility (Bash/PowerShell). **WARNING**: This script deletes all Resource Groups created by this course to stop costs.
 
 ### 📂 Workflows (`.github/workflows/`)
 Automation pipelines that run in GitHub Actions.
