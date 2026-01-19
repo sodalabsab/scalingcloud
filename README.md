@@ -19,136 +19,115 @@ This course is structured around the **AKF Scaling Cube**, a model for analyzing
 
 ---
 
+## Setup 0: Accounts (Free)
+
+Before we start, ensure you have the following accounts. Both offer free tiers perfect for this course.
+
+1.  **GitHub Account**:
+    *   [Sign up for GitHub](https://github.com/join).
+    *   This is where your code and workflows will live.
+2.  **Azure Account**:
+    *   [Create a free Azure Account](https://azure.microsoft.com/en-us/free/).
+    *   Azure gives you $200 credit for the first 30 days and 12 months of popular free services.
+
+---
+
 ## Setup 1: Local Environment & Tools
 
-Before touching the cloud, we need to set up your local development environment.
+We need a few CLI tools to interact with the cloud.
 
 ### 1. Development Tools
 Install the following essential tools:
 *   [**VS Code**](https://code.visualstudio.com/): Our code editor. Install the *Docker* and *Bicep* extensions.
 *   [**Git**](https://git-scm.com/): For version control.
-    ```bash
-    git config --global user.name "Your Name"
-    git config --global user.email "your.email@example.com"
-    ```
 *   [**Docker Desktop**](https://www.docker.com/products/docker-desktop): To build and run containers locally.
-*   [**Azure CLI**](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli): To interact with Azure from your terminal.
-    *   Verify installation: `az --version`
-    *   Login: `az login`
-*   [**Bicep CLI**](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install): To compile infrastructure templates.
+*   [**Azure CLI**](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli): To manage Azure resources.
+*   [**GitHub CLI (gh)**](https://cli.github.com/): To manage your repository and secrets from the terminal.
+*   [**Bicep CLI**](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install):
     ```bash
     az bicep install
     ```
 
-### 2. GitHub Setup
-1.  **Fork this Repository**: Click the "Fork" button at the top right of this page to create your own copy. Name it `scalecloud`.
-2.  **Clone Locally**:
+### 2. Login
+Once installed, open your terminal and authenticate:
+
+1.  **Login to Azure**:
     ```bash
-    # Replace <your-username> with your actual GitHub username
+    az login
+    ```
+2.  **Login to GitHub**:
+    ```bash
+    gh auth login
+    ```
+    *   Select `GitHub.com` -> `SSH` (recommended) or `HTTPS` -> `Login with a web browser`.
+
+### 3. Clone Repository
+1.  **Fork this Repository**:
+    *   Click the **Fork** button at the top right of this page.
+    *   **Why?** This creates a complete copy of the project under **your own GitHub account**. You need this to successfully run your own automation workflows, manage your own secrets, and make changes without affecting the original course repository.
+2.  **Clone Your Fork**:
+    *   Download your new personal copy to your computer:
+    ```bash
+    # Replace <your-username> with your GitHub username
     git clone git@github.com:<your-username>/scalecloud.git
     cd scalecloud
     ```
 
 ---
 
-## Setup 2: Cloud Configuration (Azure & GitHub)
+## Setup 2: Cloud Configuration (Automated)
 
-To automate deployments, we need to connect your GitHub repository to your Azure subscription securely.
+We use a bootstrap script to set up the connection between GitHub and Azure. This automates the creation of Identities, Role Assignments, and Configuration.
 
-### 1. Azure Setup (OIDC)
-We will use **OpenID Connect (OIDC)** to securely connect GitHub Actions to Azure without storing long-lived secrets like passwords.
+1.  **Navigate to the `infra` folder**:
+    ```bash
+    cd infra
+    ```
+2.  **Configure Environment**:
+    *   Edit this file named `config.env` using your preferred text editor.
+    *   Define your variables (Resource Group name, Location, etc.) in this file.
+3.  **Run the Bootstrap Script**:
+    ```bash
+    ./bootstrap.sh
+    ```
 
-#### Step A: Create an App Registration
-1.  Go to the [Azure Portal](https://portal.azure.com) and search for **"Microsoft Entra ID"** (formerly Azure AD).
-2.  Select **"App registrations"** -> **"New registration"**.
-3.  Name it `github-actions-scalecloud` and click **Register**.
-4.  **Important:** On the Overview page, copy and save the following IDs:
-    *   **Application (client) ID** -> We will call this `AZURE_CLIENT_ID`.
-    *   **Directory (tenant) ID** -> We will call this `AZURE_TENANT_ID`.
-
-
-### Option 1: Azure Portal Setup (Manual)
-*(See steps A, B, and C above - or simply search for "Managed Identities" in the portal if you prefer that route)*
-
-### Option 2: Azure CLI Setup (Automated & Recommended)
-This method creates a **User-Assigned Managed Identity**, which is an Azure resource that simplifies identity management.
-
-**Prerequisite:** Ensure you are logged in (`az login`) and have selected the correct subscription (`az account set -s <SUBSCRIPTION_ID>`).
-
-```bash
-# Variables - Update these!
-GITHUB_ORG="<your-github-username>"
-GITHUB_REPO="scalecloud"
-RG_NAME="rg-scalingcloud-identity"
-IDENTITY_NAME="id-github-actions-scalecloud"
-LOCATION="swedencentral" 
-
-# 1. Create Resource Group for Identity
-az group create --name $RG_NAME --location $LOCATION
-
-# 2. Create User-Assigned Managed Identity
-# This acts as the identity for GitHub Actions
-IDENTITY_ID=$(az identity create --name $IDENTITY_NAME --resource-group $RG_NAME --query id -o tsv)
-CLIENT_ID=$(az identity show --name $IDENTITY_NAME --resource-group $RG_NAME --query clientId -o tsv)
-PRINCIPAL_ID=$(az identity show --name $IDENTITY_NAME --resource-group $RG_NAME --query principalId -o tsv)
-
-# 3. Assign Contributor Role to the Subscription
-# This gives the identity permission to deploy resources in your subscription
-SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-az role assignment create --assignee $PRINCIPAL_ID --role Contributor --scope /subscriptions/$SUBSCRIPTION_ID
-
-# 4. Create Federated Credential for 'main' branch
-# This establishes the trust between GitHub Actions and the Managed Identity
-az identity federated-credential create --name "github-actions-main" \
-  --identity-name $IDENTITY_NAME \
-  --resource-group $RG_NAME \
-  --issuer "https://token.actions.githubusercontent.com" \
-  --subject "repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main" \
-  --audiences "api://AzureADTokenExchange"
-
-# 5. Set GitHub Secrets Automatically (Requires GitHub CLI 'gh')
-TENANT_ID=$(az account show --query tenantId -o tsv)
-
-echo ""
-echo "Attempting to set GitHub Secrets via CLI..."
-
-if command -v gh &> /dev/null; then
-    gh secret set AZURE_CLIENT_ID --body "$CLIENT_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
-    gh secret set AZURE_TENANT_ID --body "$TENANT_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
-    gh secret set AZURE_SUBSCRIPTION_ID --body "$SUBSCRIPTION_ID" --repo "$GITHUB_ORG/$GITHUB_REPO"
-    echo "✅ Secrets configured successfully!"
-else
-    echo "⚠️  GitHub CLI (gh) not found. Please set these secrets manually:"
-    echo "--------------------------------------------------------"
-    echo "AZURE_CLIENT_ID:       $CLIENT_ID"
-    echo "AZURE_TENANT_ID:       $TENANT_ID"
-    echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
-    echo "--------------------------------------------------------"
-fi
-```
-
-### 2. GitHub Secrets & Variables
-Go to your forked repository on GitHub: **Settings** -> **Secrets and variables**.
-
-#### A. Repository Secrets (Encrypted)
-Under the **Actions** tab of *Secrets*, add the following:
-
-| Secret Name | Value Description |
-| :--- | :--- |
-| **`AZURE_CLIENT_ID`** | The Application (client) ID from Step A. |
-| **`AZURE_TENANT_ID`** | The Directory (tenant) ID from Step A. |
-| **`AZURE_SUBSCRIPTION_ID`** | Your Azure Subscription ID (e.g., `abc-123-def-456`). |
-
-#### B. Repository Variables (Visible)
-Under the **Actions** tab of *Variables*, add:
-
-| Variable Name | Value Description |
-| :--- | :--- |
-| **`ACR_NAME`** | The name of your Azure Container Registry (e.g., `myacr123`). *Create one in the portal if you haven't yet.* |
-| **`ACR_IMAGE`** | The full path to your image in ACR (e.g., `myacr123.azurecr.io/scalingcloud:latest`). |
-| **`AZURE_RESOURCE_GROUP`** | A base name for your resource groups (e.g., `rg-scalingcloud`). |
+This script will output the created resources and verify that your GitHub Secrets have been set correctly.
 
 ---
+
+## Setup 3: Understanding the Automation (Manual Guide)
+
+If you prefer to understand what `bootstrap.sh` does under the hood, or want to do it manually, here is the step-by-step process it performs:
+
+### 1. Pre-flight Checks
+*   Verifies that `az` and `gh` CLIs are installed and logged in.
+*   Loads variables from your `config.env` file.
+
+### 2. Resource Group Creation
+*   Creates an Azure Resource Group to hold all shared infrastructure (like the Container Registry).
+
+### 3. Identity Setup (OIDC)
+*   **Infrastructure Identity**: Creates an Azure User-Assigned Managed Identity. This identity is used by GitHub Actions to deploy infrastructure (Bicep).
+*   **Role Assignment**: Assigns the `Owner` role to this identity on the Resource Group, allowing it to create and manage resources.
+*   **Federation**: Establishes a trust relationship (OIDC) between the Identity and your GitHub repository's `main` branch. This eliminates the need for storing passwords.
+
+### 4. GitHub Secrets Configuration (Infra)
+*   Sets the following secrets in your GitHub repo:
+    *   `AZURE_SUBSCRIPTION_ID`
+    *   `AZURE_TENANT_ID`
+    *   `AZURE_CLIENT_ID_INFRA` (The ID of the identity we just created)
+
+### 5. Initial Deployment & App Setup
+*   Runs `main.bicep` to deploy the Azure Container Registry and other core resources.
+*   **App Identities**: The Bicep deployment creates separate identities for the Application (Push/Pull).
+*   **App Secrets**: The script fetches the `App Push Identity` Client ID and saves it as `AZURE_CLIENT_ID` in GitHub Secrets.
+
+### 6. Variable Configuration
+*   Finally, it saves your configuration (Resource names, Location) as **GitHub Variables** so your workflows can reference them automatically.
+
+---
+
+
 
 ## Lab Workflow & Automation
 
@@ -189,3 +168,27 @@ Run this command in your terminal to delete all lab groups instantly:
 az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | \
   xargs -I {} az group delete --name {} --yes --no-wait
 ```
+
+---
+
+## Key Files & Structure
+
+Here is a quick overview of the most important files in this repository:
+
+### 📂 Infrastructure (`infra/`)
+This folder contains the core setup for the course environment.
+*   **`bootstrap.sh`**: The "one-click" setup script. It configures Azure Resources, Identities, and GitHub Secrets automatically.
+*   **`config.env`**: The configuration file where you define your custom names (Registry name, Location, Resource Groups).
+*   **`main.bicep`**: The core Infrastructure-as-Code template. It deploys persistent shared resources like the Azure Container Registry (ACR) and Managed Identities.
+*   **`nuke.sh`**: A "clean slate" utility. **WARNING**: This script deletes all Resource Groups created by this course to stop costs.
+
+### 📂 Workflows (`.github/workflows/`)
+Automation pipelines that run in GitHub Actions.
+*   **`infra.yml`**: Automatically deploys changes to the core infrastructure (`infra/main.bicep`) when you push to `main`.
+*   **`build-and-deploy-app.yml`**: Triggered by changes in `lab1/`. It builds the Docker image, pushes it to ACR, and updates the Container App.
+*   **`lab-bicep-deploy.yml`**: A manual workflow (Workflow Dispatch) used to deploy specific lab infrastructure (e.g., "Deploy Lab 3").
+*   **`tare-down-workflow.yml`**: A manual workflow to delete lab resource groups directly from GitHub.
+
+### 📂 Labs
+*   **`lab1/`**: Contains the source code for the Node.js application and its Dockerfile.
+*   **`lab3/` - `lab5/`**: Contains the Bicep templates (`lab.bicep`) for advanced scaling scenarios (Replicas, Traffic Manager, Front Door).
