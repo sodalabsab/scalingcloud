@@ -88,7 +88,7 @@ resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' =
     healthProbeSettings: {
       probePath: '/'
       probeRequestType: 'HEAD'
-      probeProtocol: 'Http'
+      probeProtocol: 'Https' // Changed from Http to Https to avoid 301 Redirects from ACA
       probeIntervalInSeconds: 120
     }
   }
@@ -101,6 +101,7 @@ resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01
   properties: {
     hostName: containerApp.properties.configuration.ingress.fqdn
     httpPort: 80
+    httpsPort: 443 // Explicitly defined to ensure HttpsOnly forwarding works
     originHostHeader: containerApp.properties.configuration.ingress.fqdn
     priority: 1
     weight: 1000
