@@ -127,6 +127,7 @@ az deployment group create `
     identityNamePull="$APP_PULL_ID" `
     identityNamePush="$APP_PUSH_ID" `
     environmentName="$ENV_NAME" `
+    containerImage="mcr.microsoft.com/k8se/quickstart:latest" `
   --output none
 
 # 8. Fetch App Identity Details (Created by Bicep)

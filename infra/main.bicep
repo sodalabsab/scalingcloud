@@ -88,6 +88,9 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+@description('Optional: Override the image to deploy. Useful for bootstrapping.')
+param containerImage string = ''
+
 // --- 4. Call the App Module ---
 module appDeployment '../lab3/lab.bicep' = {
   name: 'deploy-container-app'
@@ -96,7 +99,7 @@ module appDeployment '../lab3/lab.bicep' = {
   ]
   params: {
     location: location
-    applicationImage: '${acr.properties.loginServer}/my-website:latest'
+    applicationImage: !empty(containerImage) ? containerImage : '${acr.properties.loginServer}/my-website:latest'
     userAssignedIdentityId: idPull.id
     acrServer: acr.properties.loginServer
     // If you parameterized the Environment ID in lab.bicep, pass it here too:
