@@ -123,10 +123,6 @@ az deployment group create `
     githubUser="$GH_ORG" `
     githubRepo="$GH_REPO" `
     acrName="$ACR_NAME" `
-    acrSku="$ACR_SKU" `
-    identityNamePull="$APP_PULL_ID" `
-    identityNamePush="$APP_PUSH_ID" `
-    environmentName="$ENV_NAME" `
     containerImage="mcr.microsoft.com/k8se/quickstart:latest" `
   --output none
 

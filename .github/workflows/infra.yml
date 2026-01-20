@@ -42,7 +42,4 @@ jobs:
             githubUser=${{ github.repository_owner }}
             githubRepo=${{ github.event.repository.name }}
             acrName=${{ vars.ACR_NAME }}
-            acrSku=${{ vars.ACR_SKU }}
-            environmentName=${{ vars.ENV_NAME }}
-            identityNamePull=${{ vars.APP_PULL_ID }}
-            identityNamePush=${{ vars.APP_PUSH_ID }}
+            acrName=${{ vars.ACR_NAME }}
