@@ -36,6 +36,17 @@ else
     exit 1
 fi
 
+# --- ⚡ Set Defaults (Simplicity Update) -----------------------------------
+# Users only need to provide ACR_NAME, RG_NAME, and LOCATION.
+# Everything else is standardized.
+ACR_SKU="${ACR_SKU:-Basic}"
+ENV_NAME="${ENV_NAME:-appEnvironment}"
+
+# Standardized Identity Names (Scoped to the Resource Group anyway)
+INFRA_ID_NAME="id-github-infra"
+APP_PULL_ID="id-app-pull"
+APP_PUSH_ID="id-github-push"
+
 echo "🚀 Starting Bootstrap for Repo: $GH_ORG/$GH_REPO..."
 
 # --- 🏗️ Main Logic --------------------------------------------------------

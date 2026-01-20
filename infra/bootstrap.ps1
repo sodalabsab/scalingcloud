@@ -45,17 +45,20 @@ if (Test-Path "config.env") {
     exit 1
 }
 
+# --- ⚡ Set Defaults (Simplicity Update) -----------------------------------
+$ACR_SKU = if ([string]::IsNullOrWhiteSpace($env:ACR_SKU)) { "Basic" } else { $env:ACR_SKU }
+$ENV_NAME = if ([string]::IsNullOrWhiteSpace($env:ENV_NAME)) { "appEnvironment" } else { $env:ENV_NAME }
+
+$INFRA_ID_NAME = "id-github-infra"
+$APP_PULL_ID = "id-app-pull"
+$APP_PUSH_ID = "id-github-push"
+
 $GH_ORG = $env:GH_ORG
 $GH_REPO = $env:GH_REPO
 $RG_NAME = $env:RG_NAME
 $LOCATION = $env:LOCATION
-$INFRA_ID_NAME = $env:INFRA_ID_NAME
 $GH_BRANCH = $env:GH_BRANCH
 $ACR_NAME = $env:ACR_NAME
-$ACR_SKU = $env:ACR_SKU
-$APP_PULL_ID = $env:APP_PULL_ID
-$APP_PUSH_ID = $env:APP_PUSH_ID
-$ENV_NAME = $env:ENV_NAME
 
 Write-Host "🚀 Starting Bootstrap for Repo: $GH_ORG/$GH_REPO..."
 
