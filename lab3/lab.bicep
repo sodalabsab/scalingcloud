@@ -11,8 +11,7 @@ param acrServer string
 @description('The Resource ID of the User Assigned Identity used to pull images')
 param userAssignedIdentityId string
 
-@description('The Name of the Container App Environment (must match main.bicep)')
-param environmentName string = 'appEnvironment'
+var environmentName = 'appEnvironment'
 
 // --- Existing App Environment ---
 // We reference the environment created in main.bicep

@@ -12,19 +12,11 @@ param githubRepo string
 @description('Name of the Container Registry. Must be globally unique.')
 param acrName string = 'sodalabs001'
 
-@description('Name of the User Assigned Identity for the App (Pull)')
-param identityNamePull string = 'id-app-pull'
-
-@description('Name of the User Assigned Identity for GitHub (Push)')
-param identityNamePush string = 'id-github-push'
-
-@description('Name of the Container Apps Environment')
-param environmentName string = 'appEnvironment'
-
-// --- Configuration Parameters ---
-@description('The SKU for the Container Registry')
-@allowed(['Basic', 'Standard', 'Premium'])
-param acrSku string = 'Basic'
+// --- Internal Variables (Standardized) ---
+var identityNamePull = 'id-app-pull'
+var identityNamePush = 'id-github-push'
+var environmentName  = 'appEnvironment'
+var acrSku           = 'Basic'
 
 // --- 1. Create Core Infrastructure ---
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
