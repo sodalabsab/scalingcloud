@@ -9,7 +9,7 @@ on:
         default: 'lab3'
 
 env:
-  RESOURCE_GROUP: ${{ vars.RG_NAME }}${{ github.event.inputs.labPath }}
+  RESOURCE_GROUP: ${{ vars.RG_NAME }} 
   LOCATION: ${{ vars.LOCATION }} # Default location for resources
 
 jobs:
