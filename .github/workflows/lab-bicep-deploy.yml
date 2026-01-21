@@ -40,6 +40,7 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.RESOURCE_GROUP }}
         template: ./${{ github.event.inputs.labPath }}/lab.bicep
+        failOnStdErr: false
         # Pass ALL required parameters dynamically
         parameters: >
           applicationImage=${{ vars.ACR_IMAGE }}
