@@ -1,26 +1,51 @@
 @description('Location for the Container App Environment.')
-param location string = 'swedencentral'
+param location string = resourceGroup().location
 
 @description('Application Container Image.')
-param applicationImage string = '<acr-name>.azurecr.io/scalingcloud:latest'
+param applicationImage string
+
+@description('The ACR Login Server (e.g. sodalabs001.azurecr.io)')
+param acrServer string
+
+@description('The Resource ID of the User Assigned Identity used to pull images')
+param userAssignedIdentityId string
 
 @description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 
 // Create a Container App Environment
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'appEnvironment'
+  name: 'appEnvironment-lab4' // Use a different name to avoid conflict/confusion or reuse
   location: location
-  properties: {}
+  properties: {
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
+  }
 }
 
 // Deploy the Application Container as a Container App with public ingress
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'my-website'
+  name: 'my-website-lab4'
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityId}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
+      registries: [
+        {
+          server: acrServer
+          identity: userAssignedIdentityId
+        }
+      ]
       ingress: {
         external: true
         targetPort: 80
