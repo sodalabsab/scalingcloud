@@ -11,9 +11,6 @@ param acrServer string
 @description('The Resource ID of the User Assigned Identity used to pull images')
 param userAssignedIdentityId string
 
-@description('The Resource Group where the Infrastructure (ACR, Env) is deployed')
-param infraResourceGroup string
-
 @description('The Name of the Container App')
 param containerAppName string = 'my-website'
 
@@ -23,7 +20,7 @@ var environmentName = 'appEnvironment'
 // We reference the environment created in main.bicep
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
   name: environmentName
-  scope: resourceGroup(infraResourceGroup)
+  scope: resourceGroup()
 }
 
 // --- The Container App ---

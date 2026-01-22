@@ -191,7 +191,7 @@ print_info "Front Door provisioning state: $FRONTDOOR_STATE"
 
 # Test Front Door endpoint
 print_info "Testing Front Door endpoint (may take a few attempts if recently deployed)..."
-MAX_RETRIES=5
+MAX_RETRIES=30
 RETRY_COUNT=0
 FRONT_DOOR_SUCCESS=false
 
