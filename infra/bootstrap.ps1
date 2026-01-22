@@ -68,6 +68,13 @@ Write-Host "🚀 Starting Bootstrap for Repo: $GH_ORG/$GH_REPO..."
 Write-Host "--- 📦 Creating Resource Group: $RG_NAME ---"
 az group create --name "$RG_NAME" --location "$LOCATION" --output none
 
+# Register Resource Providers
+az provider register --namespace Microsoft.ContainerInstance
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.ManagedIdentity
+
 # 2. Set up the 'Infra' Identity (The Pipeline Runner)
 Write-Host "--- 🛡️ Setting up Infra Identity: $INFRA_ID_NAME ---"
 az identity create --name "$INFRA_ID_NAME" --resource-group "$RG_NAME" --output none

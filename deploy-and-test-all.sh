@@ -119,7 +119,7 @@ print_success "Logged into GitHub"
 print_header "Step 1: Checking Azure Container Registry Image"
 
 print_info "Logging into ACR: $ACR_NAME..."
-az acr login --name "$ACR_NAME" >/dev/null 2>&1
+az acr login --name "$ACR_NAME" --resource-group "$RG_NAME" >/dev/null 2>&1
 print_success "Logged into ACR"
 
 # Check if image exists
@@ -140,7 +140,7 @@ fi
 print_header "Step 2: Deploying Lab 3 (Azure Container Apps)"
 
 print_info "Triggering Lab 3 deployment via GitHub Actions..."
-gh workflow run lab-bicep-deploy.yml -f labNumber=lab3
+gh workflow run lab-bicep-deploy.yml -f labPath=lab3
 
 if ! wait_for_workflow "lab-bicep-deploy.yml" 600; then
     print_error "Lab 3 deployment failed"
@@ -174,7 +174,7 @@ fi
 print_header "Step 3: Deploying Lab 4 (Azure Front Door)"
 
 print_info "Triggering Lab 4 deployment via GitHub Actions..."
-gh workflow run lab-bicep-deploy.yml -f labNumber=lab4
+gh workflow run lab-bicep-deploy.yml -f labPath=lab4
 
 if ! wait_for_workflow "lab-bicep-deploy.yml" 900; then
     print_error "Lab 4 deployment failed"
@@ -245,7 +245,7 @@ fi
 cd "${SCRIPT_DIR}"
 
 print_info "Triggering Lab 5 deployment via GitHub Actions..."
-gh workflow run lab-bicep-deploy.yml -f labNumber=lab5
+gh workflow run lab-bicep-deploy.yml -f labPath=lab5
 
 if ! wait_for_workflow "lab-bicep-deploy.yml" 600; then
     print_error "Lab 5 deployment failed"

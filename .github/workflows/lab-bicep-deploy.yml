@@ -32,13 +32,16 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+    - name: Create Resource Group
+      run: az group create --name rg-scalingcloud-${{ github.event.inputs.labPath }} --location ${{ env.LOCATION }}
+
     # Step 3: Deploy Bicep file for the selected lab
     - name: Deploy Bicep file for ${{ github.event.inputs.labPath }}
       uses: azure/arm-deploy@v1  # Switch to the official action (cleaner than 'run: az deployment...')
       with:
         scope: resourcegroup
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ env.RESOURCE_GROUP }}
+        resourceGroupName: rg-scalingcloud-${{ github.event.inputs.labPath }}
         template: ./${{ github.event.inputs.labPath }}/lab.bicep
         failOnStdErr: false
         # Pass ALL required parameters dynamically

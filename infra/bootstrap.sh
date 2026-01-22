@@ -55,6 +55,10 @@ echo "🚀 Starting Bootstrap for Repo: $GH_ORG/$GH_REPO..."
 echo "--- 📦 Creating Resource Group: $RG_NAME ---"
 az group create --name "$RG_NAME" --location "$LOCATION" --output none
 az provider register --namespace Microsoft.ContainerInstance
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.ManagedIdentity
 
 
 # 2. Set up the 'Infra' Identity (The Pipeline Runner)
