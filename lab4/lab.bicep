@@ -16,6 +16,9 @@ param infraResourceGroup string = ''
 @description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 
+@description('The Name of the Container App')
+param containerAppName string = 'my-website-lab4'
+
 // Create a Container App Environment
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: 'appEnvironment-lab4' // Use a different name to avoid conflict/confusion or reuse
@@ -32,7 +35,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
 
 // Deploy the Application Container as a Container App with public ingress
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'my-website-lab4'
+  name: containerAppName
   location: location
   identity: {
     type: 'UserAssigned'

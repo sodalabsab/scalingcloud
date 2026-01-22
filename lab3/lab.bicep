@@ -14,6 +14,9 @@ param userAssignedIdentityId string
 @description('The Resource Group where the Infrastructure (ACR, Env) is deployed')
 param infraResourceGroup string
 
+@description('The Name of the Container App')
+param containerAppName string = 'my-website'
+
 var environmentName = 'appEnvironment'
 
 // --- Existing App Environment ---
@@ -25,7 +28,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
 
 // --- The Container App ---
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'my-website'
+  name: containerAppName
   location: location
   // Attach the "Badge" (Identity) to the App
   identity: {
