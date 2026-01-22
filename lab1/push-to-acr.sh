@@ -36,5 +36,7 @@ az acr login --resource-group "$RG_NAME" --name "$ACR_NAME"
 # --- 5. Push the image ---
 echo "--- 🚀 Pushing Image ---"
 docker push "$ACR_NAME.azurecr.io/$REPOSITORY:$TAG"
+gh variable set ACR_IMAGE --body "$ACR_NAME.azurecr.io/$REPOSITORY:$TAG" --repo "$GH_ORG/$GH_REPO"
+
 
 echo "✅ Success! Image pushed to: $ACR_NAME.azurecr.io/$REPOSITORY:$TAG"

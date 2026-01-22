@@ -14,7 +14,7 @@ param userAssignedIdentityId string
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 
 @description('The Name of the Container App')
-param containerAppName string = 'my-website-lab4'
+param containerAppName string = 'my-website'
 
 var environmentName = 'appEnvironment'
 
