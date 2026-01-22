@@ -10,6 +10,9 @@ param acrServer string
 @description('The Resource ID of the User Assigned Identity used to pull images')
 param userAssignedIdentityId string
 
+@description('The Resource Group where the Infrastructure (ACR, Env) is deployed (Unused in Lab 4)')
+param infraResourceGroup string = ''
+
 @description('Unique name for the Front Door endpoint.')
 param frontDoorEndpointName string = 'afd-${uniqueString(resourceGroup().id)}'
 

@@ -11,6 +11,9 @@ param acrServer string
 @description('The Resource ID of the User Assigned Identity used to pull images')
 param userAssignedIdentityId string
 
+@description('The Resource Group where the Infrastructure (ACR, Env) is deployed (Unused in Lab 5)')
+param infraResourceGroup string = ''
+
 @description('Simple k6 load testing script embedded as a multi-line string')
 var k6Script = 'import http from "k6/http";\nimport { sleep } from "k6";\n\nexport let options = {\n vus: 10,\n  duration: "30s",\n};\n\nexport default function () {\n  http.get("https://placeholder.azurefd.net");\n  sleep(1);\n}'
 

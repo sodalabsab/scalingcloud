@@ -49,3 +49,4 @@ jobs:
           applicationImage=${{ vars.ACR_IMAGE }}
           acrServer=${{ vars.ACR_NAME }}.azurecr.io
           userAssignedIdentityId=/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ vars.RG_NAME }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${{ vars.APP_PULL_ID }}
+          infraResourceGroup=${{ vars.RG_NAME }}
