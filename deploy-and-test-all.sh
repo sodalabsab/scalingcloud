@@ -279,7 +279,7 @@ fi
 print_header "Step 5: Running Comprehensive Tests"
 
 print_info "Running cloud lab tests..."
-"${SCRIPT_DIR}/test-cloud-labs.sh"
+"${SCRIPT_DIR}/test/test-cloud-labs.sh"
 
 # =============================================================================
 # Final Summary

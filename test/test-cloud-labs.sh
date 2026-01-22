@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 
 # Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="${SCRIPT_DIR}/config.env"
+CONFIG_FILE="${SCRIPT_DIR}/../config.env"
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo -e "${RED}❌ Error: config.env not found!${NC}"

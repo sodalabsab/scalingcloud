@@ -18,18 +18,18 @@ The setup is a bit quirqy when it comes to javascript code for the loadtest to s
 5. Select "Run Workflow" and refresh the page to se the newly started workflow execution
     If you click on the "Deploy" stage, it will open up and you can follow the progres of the deployemnt. If something fails, look at the error message and figure out if there is something in the setup (readme at the root of to reposiroty) that is wrong.
 
-6. Once everything is complete, attach the azure cli to the log outpur from the container: 
+
+### Accessing the Application
+6. Once everything is complete, attach the azure cli to the log output from the container: 
     ```bash
-    az container attach --resource-group <resource-group-name> --name k6-container
+    az container logs --resource-group <resource-group-name> --name k6-container
     ```
     Take notice to the result. 
     Repeate from nr 1. using the direct URL to the application and compare the results in responstime.
 
-
-### Accessing the Application
 ### Acceptance Criteria
 *   The K6 container deploys successfully to Azure.
-*   You can view the logs (`az container attach`) and see the latency results for both Direct Access and Front Door Access.
+*   You can view the logs (`az container logs`) and see the latency results for both Direct Access and Front Door Access.
 
 ### Shutdown Instructions
 **Important**: Delete the resource group to stop incurring costs.
