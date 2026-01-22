@@ -21,7 +21,7 @@ var environmentName = 'appEnvironment'
 // Create a Container App Environment
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
-  scope: resourceGroup()
+  location: location
   properties: {
     workloadProfiles: [
       {
@@ -35,7 +35,7 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
 // Deploy the Application Container as a Container App with public ingress
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
-  scope: resourceGroup()
+  location: location
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
