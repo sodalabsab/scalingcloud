@@ -114,13 +114,13 @@ resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' =
   properties: {
     loadBalancingSettings: {
       sampleSize: 4
-      successfulSamplesRequired: 3
+      successfulSamplesRequired: 2
     }
     healthProbeSettings: {
       probePath: '/'
       probeRequestType: 'HEAD'
       probeProtocol: 'Https' // Changed from Http to Https to avoid 301 Redirects from ACA
-      probeIntervalInSeconds: 120
+      probeIntervalInSeconds: 10
     }
   }
 }
