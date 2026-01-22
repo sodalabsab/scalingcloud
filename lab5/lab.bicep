@@ -11,9 +11,6 @@ param acrServer string
 @description('The Resource ID of the User Assigned Identity used to pull images')
 param userAssignedIdentityId string
 
-@description('The Resource Group where the Infrastructure (ACR, Env) is deployed (Unused in Lab 5)')
-param infraResourceGroup string = ''
-
 @description('The Name of the Container App (Unused in Lab 5)')
 param containerAppName string = ''
 
