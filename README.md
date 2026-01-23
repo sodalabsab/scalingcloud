@@ -132,6 +132,40 @@ If you prefer to understand what `setup-cloud.sh` does under the hood, or want t
 ### 6. Variable Configuration
 *   Finally, it saves your configuration (Resource names, Location) as **GitHub Variables** so your workflows can reference them automatically.
 
+### 7. Manual Setup (Portal & UI)
+If you cannot run the scripts or prefer to click through the Azure Portal and GitHub UI, follow these steps:
+
+1.  **Create Resource Group**:
+    *   Go to Azure Portal -> **Resource groups** -> **Create**.
+    *   Name it (e.g., `rg-scalingcloud-shared`) and select a region.
+
+2.  **Create Managed Identity (Infra)**:
+    *   Search for **Managed Identities** -> **Create**.
+    *   Name: `id-github-infra`. Resource Group: `rg-scalingcloud-shared`.
+    *   **Assign Role**: Go to your Resource Group -> **Access control (IAM)** -> **Add role assignment**.
+    *   Role: `Owner`. Assign to: `Managed Identity` -> Select `id-github-infra`.
+
+3.  **Federate Identity (OIDC)**:
+    *   Go to the Managed Identity `id-github-infra` -> **Federated credentials** -> **Add credential**.
+    *   Scenario: **GitHub Actions deploying Azure resources**.
+    *   Organization: `your-github-username`. Repository: `scalecloud`. Branch: `main`.
+    *   Name: `github-federation`.
+
+4.  **Create Container Registry**:
+    *   Search for **Container registries** -> **Create**.
+    *   Name: Unique name (e.g., `sodalabs001`). Resource Group: `rg-scalingcloud-shared`. SKU: `Basic`.
+
+5.  **Configure GitHub Secrets**:
+    *   Go to your GitHub Repo -> **Settings** -> **Secrets and variables** -> **Actions**.
+    *   Add **New repository secret**:
+        *   `AZURE_CLIENT_ID_INFRA`: Client ID of `id-github-infra`.
+        *   `AZURE_TENANT_ID`: Tenant ID from Azure Active Directory.
+        *   `AZURE_SUBSCRIPTION_ID`: Your Subscription ID.
+
+6.  **Configure GitHub Variables**:
+    *   Go to **Variables** tab -> **New repository variable**.
+    *   Add variables from your `config.env` (e.g., `RG_NAME`, `ACR_NAME`, `LOCATION`).
+
 ---
 
 
