@@ -47,7 +47,7 @@ INFRA_ID_NAME="id-github-infra"
 APP_PULL_ID="id-app-pull"
 APP_PUSH_ID="id-github-push"
 
-echo "🚀 Starting Bootstrap for Repo: $GH_ORG/$GH_REPO..."
+echo "🚀 Starting Cloud Setup for Repo: $GH_ORG/$GH_REPO..."
 
 # --- 🏗️ Main Logic --------------------------------------------------------
 
@@ -138,7 +138,7 @@ gh variable set APP_PULL_ID --body "$APP_PULL_ID" --repo "$GH_ORG/$GH_REPO"
 gh variable set APP_PUSH_ID --body "$APP_PUSH_ID" --repo "$GH_ORG/$GH_REPO"
 
 echo ""
-echo "✅ Bootstrap Complete!"
+echo "✅ Cloud Setup Complete!"
 echo "   Resource Group: $RG_NAME"
 echo "   Registry:       $ACR_NAME ($ACR_SKU)"
 echo "   GitHub Repo:    $GH_ORG/$GH_REPO"
