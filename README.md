@@ -36,35 +36,10 @@ Before we start, ensure you have the following accounts. Both offer free tiers p
 
 We need a few CLI tools to interact with the cloud.
 
-### 1. Development Tools
-Install the following essential tools:
-*   [**VS Code**](https://code.visualstudio.com/): Our code editor. Install the *Docker* and *Bicep* extensions.
-*   [**Git**](https://git-scm.com/): For version control.
-*   [**Docker Desktop**](https://www.docker.com/products/docker-desktop): To build and run containers locally.
-*   [**Azure CLI**](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli): To manage Azure resources.
-*   [**GitHub CLI (gh)**](https://cli.github.com/): To manage your repository and secrets from the terminal.
-*   [**Bicep CLI**](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install):
-    ```bash
-    az bicep install
-    ```
-
-### 2. Login
-Once installed, open your terminal and authenticate:
-
-1.  **Login to Azure**:
-    ```bash
-    az login
-    ```
-2.  **Login to GitHub**:
-    ```bash
-    gh auth login
-    ```
-    *   Select `GitHub.com` -> `SSH` (recommended) or `HTTPS` -> `Login with a web browser`.
-
-### 3. Clone Repository
+### 1. Fork & Clone
 1.  **Fork this Repository**:
     *   Click the **Fork** button at the top right of this page.
-    *   **Why?** This creates a complete copy of the project under **your own GitHub account**. You need this to successfully run your own automation workflows, manage your own secrets, and make changes without affecting the original course repository.
+    *   **Why?** This creates a complete copy of the project under **your own GitHub account**.
 2.  **Clone Your Fork**:
     *   Download your new personal copy to your computer:
     ```bash
@@ -73,36 +48,63 @@ Once installed, open your terminal and authenticate:
     cd scalecloud
     ```
 
----
-
-## Setup 2: Cloud Configuration (Automated)
-
-We use a bootstrap script to set up the connection between GitHub and Azure. This automates the creation of Identities, Role Assignments, and Configuration.
+### 2. Verify Local Environment
+We have provided a script to verify your local environment (Git, Docker) is ready for **Lab 1 and Lab 2**.
 
 1.  **Navigate to the `infra` folder**:
     ```bash
     cd infra
     ```
-2.  **Configure Environment**:
-    *   Edit this file named `config.env` using your preferred text editor.
-    *   Define your variables (Resource Group name, Location, etc.) in this file.
-3.  **Run the Bootstrap Script**:
+2.  **Run the Local Setup Script**:
     *   **Mac/Linux**:
         ```bash
-        ./bootstrap.sh
+        ./setup-local.sh
         ```
     *   **Windows**:
         ```powershell
-        ./bootstrap.ps1
+        ./setup-local.ps1
         ```
 
-This script will output the created resources and verify that your GitHub Secrets have been set correctly.
+This script will check if you have the necessary tools installed. If anything is missing, it will let you know what to install (Docker, Git, VS Code).
+
+---
+
+## Setup 2: Cloud Configuration (Automated)
+
+We use a setup script to configure the connection between GitHub and Azure. This is required for **Lab 3, 4, and 5**.
+
+1.  **Prerequisites**:
+    *   Ensure you have [**Azure CLI**](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and [**GitHub CLI**](https://cli.github.com/) installed.
+    *   **Login**:
+        ```bash
+        az login
+        gh auth login
+        ```
+
+2.  **Navigate to the `infra` folder**:
+    ```bash
+    cd infra
+    ```
+3.  **Configure Environment**:
+    *   Edit `config.env` using your preferred text editor.
+    *   Define your variables (Resource Group name, Location, etc.).
+4.  **Run the Cloud Setup Script**:
+    *   **Mac/Linux**:
+        ```bash
+        ./setup-cloud.sh
+        ```
+    *   **Windows**:
+        ```powershell
+        ./setup-cloud.ps1
+        ```
+
+This script will automate the creation of Identities, Role Assignments, and Configuration.
 
 ---
 
 ## Setup 3: Understanding the Automation (Manual Guide)
 
-If you prefer to understand what `bootstrap.sh` does under the hood, or want to do it manually, here is the step-by-step process it performs:
+If you prefer to understand what `setup-cloud.sh` does under the hood, or want to do it manually, here is the step-by-step process it performs:
 
 ### 1. Pre-flight Checks
 *   Verifies that `az` and `gh` CLIs are installed and logged in.
@@ -193,7 +195,8 @@ Here is a quick overview of the most important files in this repository:
 
 ### 📂 Infrastructure (`infra/`)
 This folder contains the core setup for the course environment.
-*   **`bootstrap.sh` / `bootstrap.ps1`**: The "one-click" setup script (Bash/PowerShell). It configures Azure Resources, Identities, and GitHub Secrets automatically.
+*   **`setup-local.sh` / `setup-local.ps1`**: Checks if your local environment (Git, Docker) is ready.
+*   **`setup-cloud.sh` / `setup-cloud.ps1`**: The "one-click" cloud setup script. It configures Azure Resources, Identities, and GitHub Secrets.
 *   **`config.env`**: The configuration file where you define your custom names (Registry name, Location, Resource Groups).
 *   **`main.bicep`**: The core Infrastructure-as-Code template. It deploys persistent shared resources like the Azure Container Registry (ACR) and Managed Identities.
 *   **`nuke.sh` / `nuke.ps1`**: A "clean slate" utility (Bash/PowerShell). **WARNING**: This script deletes all Resource Groups created by this course to stop costs.

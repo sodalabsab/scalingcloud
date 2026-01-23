@@ -60,7 +60,7 @@ $LOCATION = $env:LOCATION
 $GH_BRANCH = $env:GH_BRANCH
 $ACR_NAME = $env:ACR_NAME
 
-Write-Host "🚀 Starting Bootstrap for Repo: $GH_ORG/$GH_REPO..."
+Write-Host "🚀 Starting Cloud Setup for Repo: $GH_ORG/$GH_REPO..."
 
 # --- 🏗️ Main Logic --------------------------------------------------------
 
@@ -156,7 +156,7 @@ gh variable set APP_PULL_ID --body "$APP_PULL_ID" --repo "$GH_ORG/$GH_REPO"
 gh variable set APP_PUSH_ID --body "$APP_PUSH_ID" --repo "$GH_ORG/$GH_REPO"
 
 Write-Host ""
-Write-Host "✅ Bootstrap Complete!"
+Write-Host "✅ Cloud Setup Complete!"
 Write-Host "   Resource Group: $RG_NAME"
 Write-Host "   Registry:       $ACR_NAME ($ACR_SKU)"
 Write-Host "   GitHub Repo:    $GH_ORG/$GH_REPO"
