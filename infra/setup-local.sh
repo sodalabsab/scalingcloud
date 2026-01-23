@@ -29,6 +29,14 @@ if ! docker info &> /dev/null; then
 fi
 echo -e "${GREEN}✅ Docker is installed and running${NC}"
 
+# Check K6
+if ! command -v k6 &> /dev/null; then
+    echo -e "${RED}❌ Error: k6 is not installed. (Required for Lab 2)${NC}"
+    echo -e "${YELLOW}👉 Install k6: https://k6.io/docs/get-started/installation/${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ k6 is installed${NC}"
+
 # Check GitHub CLI
 if ! command -v gh &> /dev/null; then
     echo -e "${YELLOW}⚠️  Warning: GitHub CLI ('gh') is not installed. (Required for Cloud Setup later)${NC}"
@@ -49,5 +57,6 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 echo "   Git:    $(git --version)"
 echo "   Docker: $(docker --version)"
+echo "   K6:     $(k6 version)"
 echo ""
 echo -e "${YELLOW}👉 You are now ready for Lab 1 and Lab 2!${NC}"

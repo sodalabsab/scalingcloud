@@ -24,6 +24,14 @@ try {
     exit 1
 }
 
+# Check K6
+if (-not (Get-Command k6 -ErrorAction SilentlyContinue)) {
+    Write-Host "❌ Error: k6 is not installed. (Required for Lab 2)" -ForegroundColor Red
+    Write-Host "👉 Install k6: https://k6.io/docs/get-started/installation/" -ForegroundColor Yellow
+    exit 1
+}
+Write-Host "✅ k6 is installed" -ForegroundColor Green
+
 # Check GitHub CLI
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     Write-Host "⚠️  Warning: GitHub CLI ('gh') is not installed. (Required for Cloud Setup later)" -ForegroundColor Yellow
@@ -44,5 +52,6 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 Write-Host "   Git:    $(git --version)"
 Write-Host "   Docker: $(docker --version)"
+Write-Host "   K6:     $(k6 version)"
 Write-Host ""
 Write-Host "👉 You are now ready for Lab 1 and Lab 2!" -ForegroundColor Yellow
