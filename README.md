@@ -67,6 +67,26 @@ We have provided a script to verify your local environment (Git, Docker) is read
 
 This script will check if you have the necessary tools installed. If anything is missing, it will let you know what to install (Docker, Git, VS Code).
 
+### Troubleshooting: Installation without Admin Rights
+If you are on multiple-user machine (like a school or work laptop) and cannot install the Azure CLI (`az`) or GitHub CLI (`gh`) because of admin restrictions, try one of these methods:
+
+**Option 1 (Recommended): Scoop**
+[Scoop](https://scoop.sh) is a command-line installer for Windows that installs programs to your user folder, bypassing admin requirements.
+```powershell
+# 1. Install Scoop
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+
+# 2. Install Tools
+scoop install gh
+scoop install azure-cli
+```
+
+**Option 2: Manual "Portable" Install**
+You can download "portable" ZIP versions of these tools, unzip them, and add them to your user path.
+*   **Azure CLI**: Download from [Official MS Docs (ZIP)](https://aka.ms/installazurecliwindowszipx64).
+*   **GitHub CLI**: Download `..._windows_amd64.zip` from [GitHub Releases](https://github.com/cli/cli/releases).
+
 ---
 
 ## Setup 2: Cloud Configuration (Automated)
@@ -99,6 +119,23 @@ We use a setup script to configure the connection between GitHub and Azure. This
         ```
 
 This script will automate the creation of Identities, Role Assignments, and Configuration.
+
+---
+
+
+### Setup 2.5: Alternative - Cloud-Only (GitHub Codespaces)
+If you cannot install tools locally, you can run the entire course directly in your browser using **GitHub Codespaces**.
+
+1.  **Start Codespace**:
+    *   Click the **Code** green button -> **Codespaces** -> **Create codespace on main**.
+    *   This spins up a remote machine with Docker, Azure CLI, and GitHub CLI pre-installed (defined in `.devcontainer`).
+2.  **Login inside Codespace**:
+    *   Open the terminal (Ctrl+`).
+    *   `az login` (Follow the device code prompt).
+    *   `gh auth login` (It usually detects your GitHub auth automatically, just hit Enter).
+3.  **Run Setup Scripts**:
+    *   Local Setup (for Lab 1/2): `cd infra && ./setup-local.sh`
+    *   Cloud Setup (for Lab 3+): `cd infra && ./setup-cloud.sh`
 
 ---
 
