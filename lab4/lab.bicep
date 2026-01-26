@@ -18,11 +18,30 @@ param containerAppName string = 'my-website'
 
 var environmentName = 'appEnvironment'
 
+// Create a Log Analytics Workspace for Access Logs
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+  name: 'la-${uniqueString(resourceGroup().id)}'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+  }
+}
+
 // Create a Container App Environment
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
   location: location
   properties: {
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logAnalytics.properties.customerId
+        sharedKey: logAnalytics.listKeys().primarySharedKey
+      }
+    }
     workloadProfiles: [
       {
         name: 'Consumption'
@@ -32,9 +51,9 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
   }
 }
 
-// Deploy the Application Container as a Container App with public ingress
-resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: containerAppName
+// Deploy the First Application Container
+resource containerApp1 'Microsoft.App/containerApps@2024-03-01' = {
+  name: '${containerAppName}-1'
   location: location
   identity: {
     type: 'UserAssigned'
@@ -59,19 +78,52 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
     template: {
       scale: {
-        minReplicas: 3
-        maxReplicas: 20
-        rules: [
-          {
-            name: 'http-requests-scaling'
-            custom: {
-              type: 'http'
-              metadata: {
-                concurrentRequests: string(20)
-              }
-            }
+        minReplicas: 1
+        maxReplicas: 10
+      }
+      containers: [
+        {
+          name: 'my-website'
+          image: applicationImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
           }
-        ]
+        }
+      ]
+    }
+  }
+}
+
+// Deploy the Second Application Container
+resource containerApp2 'Microsoft.App/containerApps@2024-03-01' = {
+  name: '${containerAppName}-2'
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityId}': {}
+    }
+  }
+  properties: {
+    managedEnvironmentId: containerAppEnvironment.id
+    configuration: {
+      registries: [
+        {
+          server: acrServer
+          identity: userAssignedIdentityId
+        }
+      ]
+      ingress: {
+        external: true
+        targetPort: 80
+        transport: 'auto'
+      }
+    }
+    template: {
+      scale: {
+        minReplicas: 1
+        maxReplicas: 10
       }
       containers: [
         {
@@ -118,23 +170,39 @@ resource frontDoorOriginGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' =
     healthProbeSettings: {
       probePath: '/'
       probeRequestType: 'HEAD'
-      probeProtocol: 'Https' // Changed from Http to Https to avoid 301 Redirects from ACA
+      probeProtocol: 'Https'
       probeIntervalInSeconds: 10
     }
   }
 }
 
-// Front Door Origin
-resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
-  name: 'MyAppOrigin'
+// Front Door Origin 1
+resource frontDoorOrigin1 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
+  name: 'AppOrigin1'
   parent: frontDoorOriginGroup
   properties: {
-    hostName: containerApp.properties.configuration.ingress.fqdn
+    hostName: containerApp1.properties.configuration.ingress.fqdn
     httpPort: 80
-    httpsPort: 443 // Explicitly defined to ensure HttpsOnly forwarding works
-    originHostHeader: containerApp.properties.configuration.ingress.fqdn
+    httpsPort: 443
+    originHostHeader: containerApp1.properties.configuration.ingress.fqdn
     priority: 1
     weight: 1000
+    enabledState: 'Enabled'
+  }
+}
+
+// Front Door Origin 2
+resource frontDoorOrigin2 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
+  name: 'AppOrigin2'
+  parent: frontDoorOriginGroup
+  properties: {
+    hostName: containerApp2.properties.configuration.ingress.fqdn
+    httpPort: 80
+    httpsPort: 443
+    originHostHeader: containerApp2.properties.configuration.ingress.fqdn
+    priority: 1
+    weight: 1000
+    enabledState: 'Enabled'
   }
 }
 
@@ -143,7 +211,8 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
   name: 'MyRoute'
   parent: frontDoorEndpoint
   dependsOn: [
-    frontDoorOrigin
+    frontDoorOrigin1
+    frontDoorOrigin2
   ]
   properties: {
     originGroup: {
@@ -163,5 +232,8 @@ resource frontDoorRoute 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' 
 }
 
 // Outputs
-output applicationUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
-output frontDoorEndpointHostName string = frontDoorEndpoint.properties.hostName
+output applicationUrl string = 'https://${frontDoorEndpoint.properties.hostName}'
+output app1Name string = containerApp1.name
+output app2Name string = containerApp2.name
+output app1Url string = 'https://${containerApp1.properties.configuration.ingress.fqdn}'
+output app2Url string = 'https://${containerApp2.properties.configuration.ingress.fqdn}'

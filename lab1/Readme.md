@@ -12,6 +12,17 @@ This lab introduces the fundamentals of containerization using Docker. You will 
 Before starting, ensure you have completed **Setup 1** in the [root README](../README.md). Specifically, you need:
 1.  **Docker Desktop** installed and running.
 
+### Fallback: Using Podman
+If you cannot run Docker Desktop (e.g., due to admin restrictions) but have WSL 2 enabled, you can use **Podman**:
+1.  **Install Podman**: inside your WSL 2 distro (e.g., Ubuntu):
+    ```bash
+    sudo apt-get update && sudo apt-get install -y podman
+    ```
+2.  **Run Commands**: simply replace `docker` with `podman` in all instructions.
+    *   Build: `podman build -t my-website .`
+    *   Run: `podman run -d -p 8080:80 my-website`
+    *   *Note: Rootless Podman can behave slightly differently, but for this lab, it is a drop-in replacement.*
+
 ---
 
 ## Part 1: Local Development
@@ -105,7 +116,7 @@ To stop and remove the running container:
 2.  Stop the container: `docker stop <container-id>`
 3.  (Optional) Remove the container: `docker rm <container-id>`
 
----
+
 
 ## Next Steps
 

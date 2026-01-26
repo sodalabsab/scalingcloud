@@ -14,6 +14,13 @@ This lab demonstrates how to set up an Nginx reverse proxy in a Docker container
 - [K6](https://k6.io/) must be installed for running load tests. Follow the instructions on the K6 website to install it.
 - **Stop Lab 1**: Ensure you have stopped the container from Lab 1 (`docker stop <container-id>` or `docker rm -f <container-id>`) to free up port **8080**.
 
+### Fallback: Using Podman
+If you are using **Podman**:
+1.  You need **podman-compose**. Install it (usually via Python): `pip install podman-compose` or `sudo apt-get install podman-compose`.
+2.  Replace `docker compose` with `podman-compose`.
+    *   Start: `podman-compose up -d --scale my-website=3`
+    *   Stop: `podman-compose down`
+
 ### Execution
 
 1. Create a custom Docker image named `my-website` using your existing Docker setup for serving static content. If you did lab1 before this, there is already an image avaliable in docker. Othervise, refer to Lab 1 if you need guidance on building the image:
