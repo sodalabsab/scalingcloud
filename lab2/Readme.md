@@ -23,7 +23,14 @@ If you are using **Podman**:
 
 ### Execution
 
-1. Create a custom Docker image named `my-website` using your existing Docker setup for serving static content. If you did lab1 before this, there is already an image avaliable in docker. Othervise, refer to Lab 1 if you need guidance on building the image:
+1. Create a custom Docker image named `my-website` using your existing Docker setup for serving static content. 
+   
+   **Important:** You must build this image manually if you haven't already (or if you are in a fresh Codespace), because `docker-compose.yml` expects it to exist locally.
+   ```bash
+   cd ../lab1
+   docker build -t my-website .
+   cd ../lab2
+   ```
 
 2. Start the services using Docker Compose by executing this command in the project directory:
 

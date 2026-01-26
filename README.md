@@ -131,8 +131,9 @@ If you cannot install tools locally, you can run the entire course directly in y
     *   This spins up a remote machine with Docker, Azure CLI, and GitHub CLI pre-installed (defined in `.devcontainer`).
 2.  **Login inside Codespace**:
     *   Open the terminal (Ctrl+`).
+    *   `unset GITHUB_TOKEN` (Crucial: Removes the default restricted token).
     *   `az login` (Follow the device code prompt).
-    *   `gh auth login` (It usually detects your GitHub auth automatically, just hit Enter).
+    *   `gh auth login` (Select GitHub.com, SSH, and your key).
 3.  **Run Setup Scripts**:
     *   Local Setup (for Lab 1/2): `cd infra && ./setup-local.sh`
     *   Cloud Setup (for Lab 3+): `cd infra && ./setup-cloud.sh`
@@ -212,6 +213,13 @@ If you cannot run the scripts or prefer to click through the Azure Portal and Gi
 This repository uses **GitHub Actions** to automate "Lab" setups. Instead of manually clicking in the portal, you will run workflows that deploy infrastructure code (Bicep) for you.
 
 ### How to Run a Lab (Deploy Infrastructure)
+**CRITICAL: Push Lab 1 First!**
+Labs 3, 4, and 5 *depend* on the container image from Lab 1. Before running any lab deployment:
+1.  Navigate to `lab1/` code.
+2.  Make a small change (or just push the folder).
+3.  Ensure the **`Build and push application`** workflow runs successfully.
+*Without this, your Azure Container Apps will fail to start because they cannot find the image.*
+
 The workflow `Lab Bicep Deployment` handles the infrastructure creation for Labs 3, 4, and 5.
 
 1.  Navigate to the **Actions** tab in your GitHub repository.
