@@ -9,7 +9,7 @@
             "moby": "true"
         },
         "ghcr.io/devcontainers/features/node:1": {},
-        "ghcr.io/devcontainers-contrib/features/k6:2": {}
+        "ghcr.io/grafana/devcontainer-features/k6:1": {}
     },
     "customizations": {
         "vscode": {
