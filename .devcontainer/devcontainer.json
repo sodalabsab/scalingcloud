@@ -8,7 +8,8 @@
             "enableNonRootDocker": "true",
             "moby": "true"
         },
-        "ghcr.io/devcontainers/features/node:1": {}
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/devcontainers-contrib/features/k6:2": {}
     },
     "customizations": {
         "vscode": {
