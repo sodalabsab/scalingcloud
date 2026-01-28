@@ -47,6 +47,8 @@ We need a few CLI tools to interact with the cloud.
     git clone git@github.com:<your-username>/scalecloud.git
     cd scalecloud
     ```
+3.  **Enable Github Workflows**:
+    *   Navigate to the `Actions` tab in your forked repository and enable Github workflows.
 
 ### 2. Verify Local Environment
 We have provided a script to verify your local environment (Git, Docker) is ready for **Lab 1 and Lab 2**.
