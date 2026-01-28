@@ -59,6 +59,7 @@ az provider register --namespace Microsoft.App
 az provider register --namespace Microsoft.ContainerRegistry
 az provider register --namespace Microsoft.OperationalInsights
 az provider register --namespace Microsoft.ManagedIdentity
+az provider register --namespace Microsoft.Cdn
 
 
 # 2. Set up the 'Infra' Identity (The Pipeline Runner)
