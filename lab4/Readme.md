@@ -21,18 +21,49 @@ You will also learn how to monitor traffic in real-time by streaming **access lo
 ## Execution
 
 ### 1. Deploy Infrastructure
+**Option 1: GitHub UI**
 1.  Go to the **Actions** tab in your GitHub repository.
 2.  Select the **Lab bicep deployment** workflow.
 3.  Run the workflow, ensuring `lab4` is selected.
 4.  Wait for completion.
 
+**Option 2: GitHub CLI**
+You can trigger and monitor the deployment directly from your terminal:
+```bash
+# Trigger the workflow
+gh workflow run lab-bicep-deploy.yml -f labPath=lab4
+
+# Watch the execution (select the latest run)
+gh run watch
+
+# View the logs to see the "Deployment Outputs"
+gh run view --log | grep -A 10 "Deployment Outputs"
+```
+
 ### 2. Gather Information
 Once deployed, go to the Azure Portal or check the deployment outputs in GitHub/CLI to find:
 *   **Front Door URL**: `https://afd-<unique>.z01.azurefd.net`
 *   **App Names**: `my-website-1`, `my-website-2`
-*   **Resource Group Name**: The one created by the workflow.
+*   **Resource Group Name**: `rg-scalingcloud-lab4`
+
+**CLI Alternative:**
+You can retrieve these details directly from your terminal:
+
+```bash
+# 1. Set the Resource Group name (this is the default used by the workflow)
+RG_NAME="rg-scalingcloud-lab4"
+
+# 2. Get the Front Door Endpoint URL
+PROFILE_NAME=$(az afd profile list -g $RG_NAME --query "[0].name" -o tsv)
+echo "Front Door URL: https://$(az afd endpoint list --profile-name $PROFILE_NAME --resource-group $RG_NAME --query "[0].hostName" -o tsv)"
+
+# 3. List the Container Apps
+echo "Apps:"
+az containerapp list -g $RG_NAME --query "[].name" -o tsv
+```
 
 ### 3. Real-Time Access Logs
+Note that FrontDoor may take up to 45 minutes to propagate and be configured in Azure.
 To verify traffic is reaching both containers, we will stream their logs. Open **two separate terminal windows**:
 
 **Terminal 1 (Stream logs for App 1):**
@@ -73,13 +104,3 @@ k6 run -e TARGET_URL=https://<your-frontdoor-url> load.js
     *   Ensure you are looking at the correct container app name.
     *   It might take a minute for the log stream to connect.
 
-## Shutdown
-
-**Important**: Delete the resource group to stop incurring costs.
-
-**Option 1 (GitHub Actions)**: Run the "Delete Azure Resource Group" workflow.
-
-**Option 2 (Azure CLI)**:
-```bash
-az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
-```

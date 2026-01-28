@@ -54,10 +54,25 @@ Before we can deploy the container app in Azure, we need to make our container i
 4.  **Verify**: check the Azure Portal -> Container Registry -> Repositories. You should see `my-website` with the tag `latest`.
 
 ### Step 2: Deploy Infrastructure (Bicep)
-1. Go to the "action" tab in your GitHub account and select the `Lab bicep deployment` workflow to the left
-2. Click on the "Run workflow" button and specify `lab3` Lab nr (That is the default)
-3. Select "Run Workflow" and refresh the page to see the newly started workflow execution
-    If you click on the "Deploy" stage, it will open up and you can follow the progress of the deployment. If something fails, look at the error message and figure out if there is something in the setup (readme at the root of the repository) that is wrong.
+
+**Option 1: GitHub UI**
+1. Go to the "Actions" tab in your GitHub repository.
+2. Select the **Lab bicep deployment** workflow.
+3. Run the workflow, ensuring `lab3` is specified.
+4. Wait for completion.
+
+**Option 2: GitHub CLI**
+You can trigger and monitor the deployment directly from your terminal:
+```bash
+# Trigger the workflow
+gh workflow run lab-bicep-deploy.yml -f labPath=lab3
+
+# Watch the execution (select the latest run)
+gh run watch
+
+# View the logs to see the "Deployment Outputs"
+gh run view --log | grep -A 10 "Deployment Outputs"
+```
 
 4. Once everything is complete, login to Azure Portal and investigate at the created resource group
 
@@ -83,13 +98,6 @@ sed -i 's/\b[Mm][Aa][Ss][Ss][Ii][Vv][Ee][Ll][Yy]\b/Smallish/gI' index.html
 *   The K6 load test triggers auto-scaling, increasing the replica count from 3 to a higher number (up to 20).
 *   After the load test finishes, the replica count eventually scales back down.
 
-### Shutdown Instructions
-**Important**: Delete the resource group to stop incurring costs.
-*   **Option 1 (GitHub Actions)**: Run the "Delete Azure Resource Group" workflow manually.
-*   **Option 2 (Azure CLI)**:
-    ```bash
-    az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
-    ```
 
 ## File Structure
 ```bash

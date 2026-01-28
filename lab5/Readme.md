@@ -11,12 +11,27 @@ The setup is a bit quirky when it comes to javascript code for the loadtest to s
 - Setup 2 from the readme at the root of the repository must have been done and verified
 
 ### Execution
-1. Find the URL to the frontdoor in lab4. Past that into the javascript code that is in the bicep file `lab.bicep`
-2. Commit the change and push it to github.
-3. Go to the "action" tab in your GitHub account and select the `Lab bicep deployment` workflow to the left
-4. Click on the "Run workflow" button and specify `lab5` Lab nr (That is the default)
-5. Select "Run Workflow" and refresh the page to see the newly started workflow execution
-    If you click on the "Deploy" stage, it will open up and you can follow the progress of the deployment. If something fails, look at the error message and figure out if there is something in the setup (readme at the root of the repository) that is wrong.
+1. Find the URL to the frontdoor in lab4. Paste that into the javascript code that is in the bicep file `lab.bicep`.
+2. Commit the change and push it to GitHub.
+
+**Option 1: GitHub UI**
+1. Go to the "Actions" tab in your GitHub repository.
+2. Select the **Lab bicep deployment** workflow.
+3. Run the workflow, ensuring `lab5` is specified.
+4. Wait for completion.
+
+**Option 2: GitHub CLI**
+You can trigger and monitor the deployment directly from your terminal:
+```bash
+# Trigger the workflow
+gh workflow run lab-bicep-deploy.yml -f labPath=lab5
+
+# Watch the execution (select the latest run)
+gh run watch
+
+# View the logs to see the "Deployment Outputs"
+gh run view --log | grep -A 10 "Deployment Outputs"
+```
 
 
 ### Accessing the Application
@@ -30,14 +45,6 @@ The setup is a bit quirky when it comes to javascript code for the loadtest to s
 ### Acceptance Criteria
 *   The K6 container deploys successfully to Azure.
 *   You can view the logs (`az container logs`) and see the latency results for both Direct Access and Front Door Access.
-
-### Shutdown Instructions
-**Important**: Delete the resource group to stop incurring costs.
-*   **Option 1 (GitHub Actions)**: Run the "Delete Azure Resource Group" workflow manually.
-*   **Option 2 (Azure CLI)**:
-    ```bash
-    az group list --tag Project=scalingCloudLab --query "[].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait
-    ```
 
 ## File Structure
 ```bash
