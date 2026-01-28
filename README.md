@@ -10,8 +10,8 @@ By the end of this course, you will be able to:
 4.  **Deploy and scale** applications to Azure Container Apps.
 5.  **Manage traffic** and high availability with Azure Traffic Manager.
 
-### Conceptual Model: The AKF Scaling Cube
-This course is structured around the **AKF Scaling Cube**, a model for analyzing and improving the scalability of products.
+### Conceptual Model: The AKF Scale Cube
+This course is structured around the **AKF Scale Cube**, a model for analyzing and improving the scalability of products.
 
 *   **X-Axis (Horizontal Duplication)**: Cloning the application and data behind a load balancer. We cover this in **Lab 3** by running multiple replicas of our container.
 *   **Y-Axis (Functional Decomposition)**: Splitting the application into smaller services/microservices. While our demo app is simple, containerization (Lab 1) is the first step towards this architecture.
