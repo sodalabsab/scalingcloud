@@ -101,21 +101,16 @@ We use a setup script to configure the connection between GitHub and Azure. This
         gh auth login
         ```
 
-2.  **Navigate to the `infra` folder**:
-    ```bash
-    cd infra
-    ```
-3.  **Configure Environment**:
-    *   Edit `config.env` using your preferred text editor.
-    *   Define your variables (Resource Group name, Location, etc.).
 4.  **Run the Cloud Setup Script**:
     *   **Mac/Linux**:
         ```bash
+        cd infra
         ./setup-cloud.sh
         ```
     *   **Windows**:
         ```powershell
-        ./setup-cloud.ps1
+        cd infra
+        .\setup-cloud.ps1
         ```
 
 This script will automate the creation of Identities, Role Assignments, and Configuration.

@@ -28,11 +28,11 @@ echo "✅ Prerequisites OK!"
 echo ""
 
 # --- ⚙️ Load Configuration ------------------------------------------------
-if [ -f "./config.env" ]; then
-    source ./config.env
-    echo "✅ Configuration loaded from config.env"
+if [ -f "../config.env" ]; then
+    source ../config.env
+    echo "✅ Configuration loaded from ../config.env"
 else
-    echo "❌ Error: config.env file not found!"
+    echo "❌ Error: config.env file not found in root directory!"
     exit 1
 fi
 

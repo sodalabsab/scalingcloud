@@ -12,7 +12,7 @@ The Bicep file uses a declarative syntax to define Azure resources, allowing for
 - **load.js**: K6 script for load testing the containerApp.
 
 ### Prerequisites
-- Setup 2 from the readme at the root of to reposiroty must have been done and verified
+- Setup 2 from the readme at the root of the repository must have been done and verified
 - [K6](https://k6.io/) must be installed for running load tests. Follow the instructions on the K6 website to install it.
 - **Completed Lab 1**: You need the source code and knowledge from Lab 1.
 
@@ -56,14 +56,14 @@ Before we can deploy the container app in Azure, we need to make our container i
 ### Step 2: Deploy Infrastructure (Bicep)
 1. Go to the "action" tab in your GitHub account and select the `Lab bicep deployment` workflow to the left
 2. Click on the "Run workflow" button and specify `lab3` Lab nr (That is the default)
-3. Select "Run Workflow" and refresh the page to se the newly started workflow execution
-    If you click on the "Deploy" stage, it will open up and you can follow the progres of the deployemnt. If something fails, look at the error message and figure out if there is something in the setup (readme at the root of to reposiroty) that is wrong.
+3. Select "Run Workflow" and refresh the page to see the newly started workflow execution
+    If you click on the "Deploy" stage, it will open up and you can follow the progress of the deployment. If something fails, look at the error message and figure out if there is something in the setup (readme at the root of the repository) that is wrong.
 
 4. Once everything is complete, login to Azure Portal and investigate at the created resource group
 
 5. Find the application metrics under **Monitoring->Metrics** and create a new metrics diagram by selecting **Replica count** in the Metric dropdown
 
-    You should now see 3 started replicas. In the bicep file we stated that it should scale to max 20 replicas if there were more than 20 HTTP requests in parallel. To simulate this, we ask K6 to toadtest the application.
+    You should now see 3 started replicas. In the bicep file we stated that it should scale to max 20 replicas if there were more than 20 HTTP requests in parallel. To simulate this, we ask K6 to loadtest the application.
 
 6. Copy the URL of the application and past in in to the load.js file in VS Code. Open a terminal and run the test
     ```bash

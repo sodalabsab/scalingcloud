@@ -2,7 +2,7 @@
 set -e # Stop on error
 
 # --- 1. Load Configuration from ../infra/config.env ---
-CONFIG_PATH="../infra/config.env"
+CONFIG_PATH="../config.env"
 
 if [ -f "$CONFIG_PATH" ]; then
     echo "✅ Loading configuration from $CONFIG_PATH..."

@@ -31,17 +31,17 @@ Write-Host "✅ Prerequisites OK!"
 Write-Host ""
 
 # --- ⚙️ Load Configuration ------------------------------------------------
-if (Test-Path "config.env") {
-    Get-Content "config.env" | ForEach-Object {
+if (Test-Path "../config.env") {
+    Get-Content "../config.env" | ForEach-Object {
         if ($_ -match "^\s*([^#=]+)=(.*)$") {
             $name = $matches[1].Trim()
             $value = $matches[2].Trim()
             [Environment]::SetEnvironmentVariable($name, $value, "Process")
         }
     }
-    Write-Host "✅ Configuration loaded from config.env"
+    Write-Host "✅ Configuration loaded from ../config.env"
 } else {
-    Write-Host "❌ Error: config.env file not found!"
+    Write-Host "❌ Error: config.env file not found in root directory!"
     exit 1
 }
 
