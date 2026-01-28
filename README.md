@@ -101,7 +101,23 @@ We use a setup script to configure the connection between GitHub and Azure. This
         gh auth login
         ```
 
-4.  **Run the Cloud Setup Script**:
+2.  **Configure your environment**:
+    *   **Edit /config.env**:
+        Review the `<changeme>` environment variables in the `config.env` file; the rest can be kept as-is.
+
+        ```
+        # 1. Azure Resource Settings
+        RG_NAME="rg-scalingcloud-lab"        # Resource Group Name
+        LOCATION="swedencentral"             # Azure Region
+        ACR_NAME="<changeme>"                # Registry Name (Must be globally unique!)
+
+        # 2. GitHub Settings
+        GH_ORG="<changeme>"                  # Your GitHub Username/Org
+        GH_REPO="scalingcloud"               # Your Repository Name
+        GH_BRANCH="main"                     # Your Branch (usually main or master)
+        ```
+
+3.  **Run the Cloud Setup Script**:
     *   **Mac/Linux**:
         ```bash
         cd infra
