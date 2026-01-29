@@ -10,8 +10,8 @@ By the end of this course, you will be able to:
 4.  **Deploy and scale** applications to Azure Container Apps.
 5.  **Manage traffic** and high availability with Azure Traffic Manager.
 
-### Conceptual Model: The AKF Scaling Cube
-This course is structured around the **AKF Scaling Cube**, a model for analyzing and improving the scalability of products.
+### Conceptual Model: The AKF Scale Cube
+This course is structured around the **AKF Scale Cube**, a model for analyzing and improving the scalability of products.
 
 *   **X-Axis (Horizontal Duplication)**: Cloning the application and data behind a load balancer. We cover this in **Lab 3** by running multiple replicas of our container.
 *   **Y-Axis (Functional Decomposition)**: Splitting the application into smaller services/microservices. While our demo app is simple, containerization (Lab 1) is the first step towards this architecture.
@@ -47,6 +47,8 @@ We need a few CLI tools to interact with the cloud.
     git clone git@github.com:<your-username>/scalecloud.git
     cd scalecloud
     ```
+3.  **Enable Github Workflows**:
+    *   Navigate to the `Actions` tab in your forked repository and enable Github workflows.
 
 ### 2. Verify Local Environment
 We have provided a script to verify your local environment (Git, Docker) is ready for **Lab 1 and Lab 2**.
@@ -101,7 +103,23 @@ We use a setup script to configure the connection between GitHub and Azure. This
         gh auth login
         ```
 
-4.  **Run the Cloud Setup Script**:
+2.  **Configure your environment**:
+    *   **Edit /config.env**:
+        Review the `<changeme>` environment variables in the `config.env` file; the rest can be kept as-is.
+
+        ```
+        # 1. Azure Resource Settings
+        RG_NAME="rg-scalingcloud-lab"        # Resource Group Name
+        LOCATION="swedencentral"             # Azure Region
+        ACR_NAME="<changeme>"                # Registry Name (Must be globally unique!)
+
+        # 2. GitHub Settings
+        GH_ORG="<changeme>"                  # Your GitHub Username/Org
+        GH_REPO="scalingcloud"               # Your Repository Name
+        GH_BRANCH="main"                     # Your Branch (usually main or master)
+        ```
+
+3.  **Run the Cloud Setup Script**:
     *   **Mac/Linux**:
         ```bash
         cd infra
