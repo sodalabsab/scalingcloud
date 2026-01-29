@@ -27,7 +27,7 @@ echo "    Registry: $ACR_NAME"
 echo "    Image:    $REPOSITORY:$TAG"
 
 # We use the variables loaded from the config file
-docker build --platform linux/amd64 -t "$ACR_NAME.azurecr.io/$REPOSITORY:$TAG" .
+docker build --platform linux/amd64 -t "$ACR_NAME.azurecr.io/$REPOSITORY:$TAG" ../lab1
 
 # --- 4. Log in to ACR ---
 echo "--- 🔑 Logging in to ACR ($ACR_NAME) ---"

@@ -130,7 +130,7 @@ if az acr repository show --name "$ACR_NAME" --repository my-website >/dev/null 
 else
     print_error "Image 'my-website' not found in ACR!"
     print_info "Please build and push the image first using the build workflow or manually"
-    print_info "For manual push: cd lab1 && ./push-to-acr.sh"
+    print_info "For manual push: cd lab3 && ./push-to-acr.sh"
     exit 1
 fi
 

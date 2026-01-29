@@ -127,7 +127,6 @@ Now that you have successfully containerized the application and confirmed it wo
 .
 ├── Dockerfile          # Configuration for the Nginx container
 ├── README.md           # This documentation
-├── push-to-acr.sh      # Helper script for pushing to Azure (Used in Lab 3)
 ├── setup-massively.sh  # Content setup script (Linux/Mac)
 └── setup-massively.bat # Content setup script (Windows)
 ```

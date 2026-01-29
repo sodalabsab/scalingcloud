@@ -34,17 +34,15 @@ Before we can deploy the container app in Azure, we need to make our container i
     Navigate to the `lab1` directory (where the Dockerfile is) and run the provided helper script. It handles building (for amd64), tagging, and pushing.
     
     **Linux/Mac:**
-    *Open the script `push-to-acr.sh` and update the `ACR_NAME` variable first!*
     ```bash
-    cd lab1
+    cd lab3
     ./push-to-acr.sh
     cd ..
     ```
     
     **Windows:**
-    *Open the script `push-to-acr.bat` and update the `ACR_NAME` variable first!*
     ```cmd
-    cd lab1
+    cd lab3
     push-to-acr.bat
     cd ..
     ```
@@ -104,5 +102,7 @@ sed -i 's/\b[Mm][Aa][Ss][Ss][Ii][Vv][Ee][Ll][Yy]\b/Smallish/gI' index.html
 .
 ├── lab.bicep           # Bicep file that declares a Container App in Azure
 ├── load.js             # K6 script for load testing
+├── push-to-acr.sh      # Helper script for pushing to Azure
+├── push-to-acr.bat     # Helper script for pushing to Azure (Windows)
 └── README.md           # Project documentation
 ```

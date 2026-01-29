@@ -14,7 +14,7 @@ if exist "%CONFIG_PATH%" (
     )
 ) else (
     echo [ERROR] Could not find config.env at %CONFIG_PATH%
-    echo         Make sure you are running this script from the 'lab1' folder.
+    echo         Make sure you are running this script from the 'lab3' folder.
     exit /b 1
 )
 
@@ -27,7 +27,7 @@ echo --- 🐳 Building Docker Image ---
 echo     Registry: %ACR_NAME%
 echo     Image:    %REPOSITORY%:%TAG%
 
-docker build --platform linux/amd64 -t %ACR_NAME%.azurecr.io/%REPOSITORY%:%TAG% .
+docker build --platform linux/amd64 -t %ACR_NAME%.azurecr.io/%REPOSITORY%:%TAG% ../lab1
 
 :: --- 4. Log in to ACR ---
 echo --- 🔑 Logging in to ACR (%ACR_NAME%) ---
