@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 // Target URL (modify to point to your Nginx load-balanced endpoint)
-const url = 'https://my-website.agreeablesky-896f72b6.swedencentral.azurecontainerapps.io';
+const url = 'https://my-website-1.calmwave-81cd8ac5.swedencentral.azurecontainerapps.io';
 
 export let options = {
   vus: 50,           // Number of virtual users
